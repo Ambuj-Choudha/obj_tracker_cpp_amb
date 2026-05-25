@@ -49,39 +49,31 @@ auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
     return frame;
 }
 
-int main(int argc, char* argv[]){
-    if(argc < 2){
-        WebcamCamera camera;
-        try {
-            while(true){
-                auto frame = camera.getNextFrame();
-                // cv::imshow("Live", frame);
-                // if (cv::waitKey(0)){
-                //     break;
-                // }
-            }
-        } catch (const std::runtime_error& error){
-            std::cout << "Runtime error: " << error.what() << "\n";
-        }
-    } else if(argc == 2){
-        std::string source_file_name = argv[1];
+//==================================================================
+// ****************ONLY FOR TESTING*********************************
+int main(int argc, char* argv[]) {
+    std::unique_ptr<IInputSource> source;  // use pointer from base class
 
-        VideoFile video_file(source_file_name);
-        try{
-            while(true){
-                auto frame = video_file.getNextFrame();
-                // cv::imshow("Live", frame);
-                // if (cv::waitKey(0)){
-                //     break;
-                // }
-            }
-        } catch(const std::runtime_error& error){
-            std::cout << "Runtime error: " << error.what() << "\n";
-        }
+    if (argc < 2) {
+        source = std::make_unique<WebcamCamera>();
+    } else if (argc == 2) {
+        source = std::make_unique<VideoFile>(argv[1]);
     } else {
         std::cout << "Wrong number of arguments passed!" << "\n";
         std::cout << "Use <program name> <source_video_file> OR simply <program name> for webcam..." << "\n";
         return -1;
+    }
+
+    try {
+        while (true) {
+            auto frame = source->getNextFrame();  // calling method from base pointer
+            if (!frame) break;                    // nullopt = VideoFile EOF
+            
+            cv::imshow("Live", *frame);  //std::optional needs to be unpacked using '*' operator
+            if (cv::waitKey(1) == 'q') break;
+        }
+    } catch (const std::runtime_error& e) {
+        std::cout << "Runtime error: " << e.what() << "\n";
     }
     return 0;
 }
