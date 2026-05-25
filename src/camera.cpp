@@ -41,7 +41,7 @@ auto VideoFile::getNextFrame() -> cv::Mat {
     bool read_file_ok = cap.read(frame);
 
     if(!read_file_ok){
-        throw std::runtime_error("Cannot read the captured frame!");
+        return std::nullopt;
     }
     if(frame.empty()){
         throw std::runtime_error("Read successful but empty frame!");
