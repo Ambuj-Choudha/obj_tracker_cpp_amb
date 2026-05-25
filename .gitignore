@@ -1,0 +1,5 @@
+# ignore personal notes folder
+notes/
+
+# ignore build directory
+build/
