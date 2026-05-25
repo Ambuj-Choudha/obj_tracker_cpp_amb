@@ -20,7 +20,7 @@ auto WebcamCamera::getNextFrame() -> cv::Mat {
     cv::Mat frame;
     bool read_img_ok = cap.read(frame);
     if (!read_img_ok) {
-        throw std::runtime_error("cap.read() failed - stream ended or device disconnected");
+        throw std::runtime_error("cap.read() failed, device maybe disconnected");
     }
     if (frame.empty()) {
         throw std::runtime_error("cap.read() succeeded but returned an empty frame");
