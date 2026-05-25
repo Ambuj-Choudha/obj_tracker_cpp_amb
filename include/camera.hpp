@@ -8,7 +8,7 @@
 class IInputSource {
     public:
         virtual ~IInputSource() = default;
-        virtual cv::Mat getNextFrame() = 0;
+        virtual std::optional<cv::Mat> getNextFrame() = 0;
 };
 
 class WebcamCamera : public IInputSource{
@@ -19,7 +19,7 @@ class WebcamCamera : public IInputSource{
         WebcamCamera(WebcamCamera&&) = default;  // move constructor
         ~WebcamCamera() = default;  // destructor
 
-        cv::Mat getNextFrame() override;
+        std::optional<cv::Mat> getNextFrame() override;
         
     private:
         int deviceID;
@@ -35,7 +35,7 @@ class VideoFile : public IInputSource{
         VideoFile(VideoFile&&) = default;
         ~VideoFile() = default;
 
-        cv::Mat getNextFrame() override;
+        std::optional<cv::Mat> getNextFrame() override;
     private:
         std::string source_file;
         int apiID;

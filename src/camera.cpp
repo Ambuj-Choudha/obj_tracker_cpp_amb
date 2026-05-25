@@ -16,7 +16,7 @@ WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{
     }
 }
 
-auto WebcamCamera::getNextFrame() -> cv::Mat { 
+auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional for matching signature of base class
     cv::Mat frame;
     bool read_img_ok = cap.read(frame);
     if (!read_img_ok) {
@@ -36,7 +36,7 @@ VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{so
     }
 }
 
-auto VideoFile::getNextFrame() -> cv::Mat {
+auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
     cv::Mat frame;
     bool read_file_ok = cap.read(frame);
 
