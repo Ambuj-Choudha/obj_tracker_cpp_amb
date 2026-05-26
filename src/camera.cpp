@@ -1,8 +1,8 @@
-#include <opencv2/core.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/highgui.hpp>
+#include <cstdio>
 #include <iostream>
-#include <stdio.h>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/videoio.hpp>
 
 // include the interface file
 #include "camera.hpp"
@@ -67,10 +67,14 @@ int main(int argc, char* argv[]) {
     try {
         while (true) {
             auto frame = source->getNextFrame();  // calling method from base pointer
-            if (!frame) break;                    // nullopt = VideoFile EOF
-            
+            if (!frame) {
+              break;  // nullopt = VideoFile EOF
+            }
+
             cv::imshow("Live", *frame);  //std::optional needs to be unpacked using '*' operator
-            if (cv::waitKey(1) == 'q') break;
+            if (cv::waitKey(1) == 'q') {
+              break;
+            }
         }
     } catch (const std::runtime_error& e) {
         std::cout << "Runtime error: " << e.what() << "\n";
