@@ -1,0 +1,17 @@
+---
+# Enable groups of checks: bugprone, readability, and modernize.
+# Disable specific checks using the '-' prefix.
+Checks: >
+  bugprone-*,
+  readability-*,
+  modernize-*,
+  cppcoreguidelines-*,
+  -performance-*,
+  -modernize-use-trailing-return-type
+
+FormatStyle: google
+
+HeaderFilterRegex: ""
+
+# WarningsAsErrors: >
+
