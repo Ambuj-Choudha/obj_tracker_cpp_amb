@@ -18,6 +18,9 @@ WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{
     std::cout << "Camera initialized successfully!\n";
     cap.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);    
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, Defaults::FrameDefaultWidth);
+
+    std::cout << "Frame Width: " << cap.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
+    std::cout << "Frame Height: " << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
 
 auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional for matching signature of base class
@@ -40,6 +43,9 @@ VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{so
     }
     cap.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, Defaults::FrameDefaultHeight);
+
+    std::cout << "Frame Width: " << cap.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
+    std::cout << "Frame Height: " << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
 
 auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
