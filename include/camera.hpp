@@ -22,7 +22,7 @@ class WebcamCamera : public IInputSource{
         WebcamCamera(const WebcamCamera&) = delete;  // copy constructor
         WebcamCamera& operator=(const WebcamCamera&) = delete;  // copy assignment constructor
         WebcamCamera(WebcamCamera&&) = default;  // move constructor
-        ~WebcamCamera() = default;  // destructor
+        ~WebcamCamera() override = default;      // destructor
 
         std::optional<cv::Mat> getNextFrame() override;
         
@@ -38,7 +38,7 @@ class VideoFile : public IInputSource{
         VideoFile(const VideoFile&) = delete;
         VideoFile& operator=(const VideoFile&) = delete;
         VideoFile(VideoFile&&) = default;
-        ~VideoFile() = default;
+        ~VideoFile() override = default;
 
         std::optional<cv::Mat> getNextFrame() override;
     private:
