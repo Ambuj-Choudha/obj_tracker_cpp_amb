@@ -74,7 +74,9 @@ int main(int argc, char* argv[]) {
             }
 
             cv::imshow("Live", *frame);  //std::optional needs to be unpacked using '*' operator
-            if (cv::waitKey(1) == 'q') {
+            
+            int key = cv::waitKey(1);
+            if (key == 'q' || key == 'Q' || key == 27) {
               break;
             }
         }
