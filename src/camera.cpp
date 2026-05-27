@@ -3,6 +3,7 @@
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 
 // include the interface file
@@ -32,6 +33,9 @@ auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional f
     if (frame.empty()) {
         throw std::runtime_error("cap.read() succeeded but returned an empty frame. The camera may not be delivering images.");
     }
+    
+    updateFps();
+
     return frame;
 }
 
@@ -58,6 +62,9 @@ auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
     if(frame.empty()){
         throw std::runtime_error("Frame read was successful but the frame is empty. The video file may be corrupted or at EOF.");
     }
+
+    updateFps();
+
     return frame;
 }
 
@@ -85,6 +92,9 @@ int main(int argc, char* argv[]) {
             if (!frame) {
               break;  // nullopt = VideoFile EOF
             }
+
+            cv::putText(*frame, "FPS: " + std::to_string(static_cast<int>(source->getFps())), 
+                        cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
 
             cv::imshow("Live", *frame);  //std::optional needs to be unpacked using '*' operator
             
