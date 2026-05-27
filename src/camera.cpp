@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <format>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -12,8 +13,9 @@ WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{
     
     cap.open(deviceID, apiID);
     if (!cap.isOpened()) {
-        throw std::runtime_error("ERROR! Unable to open camera");
+        throw std::runtime_error(std::format("Error: Could not open camera with deviceID: {} \n", deviceID));
     }
+    std::cout << "Camera initialized successfully!\n";
 }
 
 auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional for matching signature of base class
@@ -23,7 +25,7 @@ auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional f
         throw std::runtime_error("cap.read() failed, device maybe disconnected");
     }
     if (frame.empty()) {
-        throw std::runtime_error("cap.read() succeeded but returned an empty frame");
+        throw std::runtime_error("cap.read() succeeded but returned an empty frame. The camera may not be delivering images.");
     }
     return frame;
 }
@@ -32,7 +34,7 @@ VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{so
     
     cap.open(source_file, apiID);
     if (!cap.isOpened()) {
-        throw std::runtime_error("ERROR! Unable to open the source file");
+        throw std::runtime_error(std::format("ERROR: Unable to open source file '{}'. Please check the file path and format.", source_file));
     }
 }
 
@@ -44,7 +46,7 @@ auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
         return std::nullopt;
     }
     if(frame.empty()){
-        throw std::runtime_error("Read successful but empty frame!");
+        throw std::runtime_error("Frame read was successful but the frame is empty. The video file may be corrupted or at EOF.");
     }
     return frame;
 }
