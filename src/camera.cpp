@@ -16,7 +16,7 @@ WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{
         throw std::runtime_error(std::format("Error: Could not open camera with deviceID: {} \n", deviceID));
     }
     std::cout << "Camera initialized successfully!\n";
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);    
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, Defaults::FrameDefaultWidth);
 }
 
@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
     if (argc < 2) {
         source = std::make_unique<WebcamCamera>();
     } else if (argc == 2) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         source = std::make_unique<VideoFile>(argv[1]);
     } else {
         std::cout << "Wrong number of arguments passed!" << "\n";
