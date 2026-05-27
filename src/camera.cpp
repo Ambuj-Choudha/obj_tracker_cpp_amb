@@ -16,6 +16,8 @@ WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{
         throw std::runtime_error(std::format("Error: Could not open camera with deviceID: {} \n", deviceID));
     }
     std::cout << "Camera initialized successfully!\n";
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, Defaults::FrameDefaultWidth);
 }
 
 auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional for matching signature of base class
@@ -36,6 +38,8 @@ VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{so
     if (!cap.isOpened()) {
         throw std::runtime_error(std::format("ERROR: Unable to open source file '{}'. Please check the file path and format.", source_file));
     }
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, Defaults::FrameDefaultWidth);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, Defaults::FrameDefaultHeight);
 }
 
 auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
@@ -67,6 +71,8 @@ int main(int argc, char* argv[]) {
     }
 
     try {
+        cv::namedWindow("Input Feed", cv::WINDOW_NORMAL);
+        std::cout << "Starting webcam feed. Press 'q' or 'ESC' to quit.\n";
         while (true) {
             auto frame = source->getNextFrame();  // calling method from base pointer
             if (!frame) {
