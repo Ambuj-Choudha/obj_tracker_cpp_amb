@@ -1,5 +1,26 @@
 # ignore personal notes folder
 notes/
 
+# ignore any video files
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.mpg
+*.mpeg
+*.wmv
+*.webm
+*.flv
+*.m4v
+*.ogv
+*.3gp
+*.3g2
+*.ts
+*.mts
+*.m2ts
+*.rmvb
+*.vob
+
 # ignore build directory
 build/
+build-ninja/
