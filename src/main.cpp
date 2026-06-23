@@ -98,15 +98,41 @@ using namespace Data;
     }
 
 
-int main(){
+int main(int argc, char* argv[]) {
+    std::unique_ptr<IInputSource> source;  // use pointer from base class
 
-    std::vector<Data::Track> tracks;
-    // open the camera for video capture
+    if (argc < 2) {
+        source = std::make_unique<WebcamCamera>();
+    } else if (argc == 2) {
+        source = std::make_unique<VideoFile>(argv[1]);
+    } else {
+        std::cout << "Wrong number of arguments passed!" << "\n";
+        std::cout << "Use <program name> <source_video_file> OR simply <program name> for webcam..." << "\n";
+        return -1;
+    }
 
+    try {
+        while (true) {
+            auto frame = source->getNextFrame();  // calling method from base pointer
+            if (!frame) break;                    // nullopt = VideoFile EOF
+
+            cv::imshow("Live", *frame);  // JUST FOR TESTING
+
+            int key = cv::waitKey(1);
+            if (key == 'q' || key == 'Q' || key == 27) {
+                break;
+
+        }
+    } catch (const std::runtime_error& e) {
+        std::cout << "Runtime error: " << e.what() << "\n";
+    }
+
+/*
     // for each frame in frames
         // extract frames from the video stream
-    
-        auto detection_in_current_frame = detect_objects(frame); // run object detection on each frame and get detections
+         Frame input_frame{*frame}; // create 'Frame' object by using the current frame
+
+            auto detection_in_current_frame = detect_objects(input_frame); // run object detection on each frame and get detections
 
         Track::update_tracks(detection_in_current_frame, tracks);
             // create tracks from the detections
@@ -120,6 +146,6 @@ int main(){
             // 2. draw the tracks by consolidating the positional information
 
         save_frame(annotated_frame); // save the processed data on the disk
-
+*/
     return 0;
 }
