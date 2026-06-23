@@ -4,7 +4,7 @@
 #include <iostream>
 #include <stdio.h>
 
-namespace Defaults {
+namespace CameraDefaults {
     inline constexpr int FrameDefaultWidth  = 1280;
     inline constexpr int FrameDefaultHeight = 720;
 }
