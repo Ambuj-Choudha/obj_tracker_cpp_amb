@@ -33,4 +33,14 @@ test_env/
 *.pt
 
 # ignore .vscode folder
-/.vscode
+.vscode/
+
+# ignore the folder for testing
+scratch/
+
+.claude/
+
+# the docs are currently (WIP)
+docs/
+
+
