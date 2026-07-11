@@ -9,7 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(OpenCV REQUIRED)
 
 set(SOURCES  
-    src/main.cpp)
+    src/main.cpp
+    src/camera.cpp
+    src/detector.cpp
+    src/transforms.cpp
+    src/visualization.cpp)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # for manually analyzing any of the files using clang-tidy
 
