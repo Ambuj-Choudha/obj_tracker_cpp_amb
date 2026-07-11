@@ -24,3 +24,6 @@ notes/
 # ignore build directory
 build/
 build-ninja/
+
+#ignore test env
+test_env/
