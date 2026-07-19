@@ -25,19 +25,18 @@ int main(int argc, char* argv[]) {
     }
 
     try {
+        using namespace std::string_literals;
+        std::string model_path = "assets/model/yolov10m/yolov10m.onnx"s;
+
+        auto detector = YOLOv10DetectorONNX(model_path);
+        auto visualizer_obj = Visualizer(2);
+
         while (true) {
             auto frame = source->getNextFrame();  // calling method from base pointer
             if (!frame) break;                    // nullopt = VideoFile EOF
 
             Data::Frame input_frame{*frame};  // * as frame is of type std::optional
-            
-            using namespace std::string_literals;
-            std::string model_path = "assets/model/yolov10m/yolov10m.onnx"s;
-
-            auto detector = YOLOv10DetectorONNX(model_path);
             auto detections_in_current_frame = detector.detect(input_frame);
-            
-            auto visualizer_obj = Visualizer(2);
             visualizer_obj.draw_detections(input_frame, detections_in_current_frame);
             cv::imshow("Detected Objects", input_frame.mat);
 
