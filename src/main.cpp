@@ -45,8 +45,9 @@ int main(int argc, char* argv[]) {
                 break;
             }
         }
-    } catch (const std::runtime_error& e) {
-        std::cout << "Runtime error: " << e.what() << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Fatal exception: " << e.what() << "\n";
+        return -1;
     }
     return 0;
 }
