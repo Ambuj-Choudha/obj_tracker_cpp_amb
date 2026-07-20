@@ -41,7 +41,7 @@ std::vector<Data::Detection> YOLOv10DetectorONNX::postprocess_frames_(
 
     // YOLOv10 output rows are sorted by score descending; break early below threshold.
     for (int64_t i = 0; i < raw_outputs.rows; ++i) {
-        const float* row = raw_outputs.data + i * raw_outputs.cols;
+        const float* row = raw_outputs.row(i);  // i-th detection
         const double conf = row[4];
 
         // rows are score-sorted, so once we drop below threshold we're done

@@ -12,13 +12,16 @@
 class InferenceEngine {
 public:
     // View onto the model's last output tensor.
-    // `data` points into a buffer owned by the engine and is valid only
+    // `data_ptr` points into a buffer owned by the engine and is valid only
     // until the next call to infer() — the underlying Ort::Value is held
     // as a member and overwritten on each infer().
     struct Output {
-        const float* data;
+        const float* data_ptr;
         int64_t rows;   // e.g. 300 detection slots
         int64_t cols;   // e.g. 6 fields per row
+
+        // Pointer to the start of row `i` (row-major layout).
+        const float* row(int64_t i) const { return data_ptr + i * cols; }
     };
 
     explicit InferenceEngine(const std::string& model_path);
