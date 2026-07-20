@@ -27,3 +27,20 @@ build-ninja/
 
 #ignore test env
 test_env/
+
+# ignore the model file
+*.onnx
+*.pt
+
+# ignore .vscode folder
+.vscode/
+
+# ignore the folder for testing
+scratch/
+
+.claude/
+
+# the docs are currently (WIP)
+docs/
+
+

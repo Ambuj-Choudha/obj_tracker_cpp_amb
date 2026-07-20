@@ -1,0 +1,87 @@
+#include <sstream>
+#include<string>
+#include<unordered_map>
+#include<optional>
+// #include<format>
+#include<fstream>
+#include <stdexcept>
+#include<random>
+#include <opencv2/core.hpp>
+#include<opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+
+#include "detector.hpp"
+#include "common/types.hpp"
+#include "visualization.hpp"
+
+// TODO: Both the helper function should only be called once only for the very first time the model is run, after that use the cached file
+
+namespace {
+    std::unordered_map<int, std::string> load_class_labels(const std::string& labels_file_path) {
+        std::unordered_map<int, std::string> labels;
+        std::ifstream in(labels_file_path);
+        if (!in) throw std::runtime_error("Failed to open labels file: " + labels_file_path);
+
+        std::string line;
+        int idx = 0;
+        while (std::getline(in, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            labels.emplace(idx++, std::move(line));
+        }
+        return labels;
+    }
+
+    std::unordered_map<int, cv::Scalar> generate_colour_map(int num_classes) {
+        std::mt19937 rng(VisualizerDefaults::colour_seed);
+        std::uniform_int_distribution<int> dist(0, 255);
+        std::unordered_map<int, cv::Scalar> colours;
+        for (int i = 0; i < num_classes; ++i) {
+            int r = dist(rng);
+            int g = dist(rng);
+            int b = dist(rng);
+            colours.emplace(i, cv::Scalar(b, g, r));
+        }
+        return colours;
+    }
+}
+
+Visualizer::Visualizer(int border_thickness, std::optional<std::tuple<int, int, int>> text_colour)
+    : border_thickness_{border_thickness},
+      text_colour_{text_colour.value_or(VisualizerDefaults::text_colour)},
+      font_scale_{VisualizerDefaults::font_scale},
+      class_labels_dict_{load_class_labels(VisualizerDefaults::class_labels_file_path)},
+      colour_map_{generate_colour_map(DetectorDefaults::num_classes)} {}
+
+void Visualizer::draw_detections(Data::Frame& frame, const std::vector<Data::Detection>& detections) {
+    for(const auto& detection : detections) {
+        this->draw_bbox_w_labels_(frame.mat, detection);
+    }
+}
+
+void Visualizer::set_font_scale(double new_font_scale) {
+    this->font_scale_ = new_font_scale;
+}
+
+void Visualizer::draw_bbox_w_labels_(cv::Mat& img, const Data::Detection& detected_obj) {
+    // extract the right coordinates from the Detection struct
+    int x1 = detected_obj.bbox.x1;
+    int y1 = detected_obj.bbox.y1;
+    int x2 = detected_obj.bbox.x2;
+    int y2 = detected_obj.bbox.y2;
+    int class_id = detected_obj.class_id;
+    
+    // get the label for the object based on the class ID using the undodered_map 'class_labels_dict_'created earlier, also mention the confidence score. "<class_name> : <conf_score>"
+    auto box_colour = this->colour_map_.at(class_id);
+    auto class_name = this->class_labels_dict_.at(class_id);
+
+    std::ostringstream oss;
+    oss << class_name << " : " << detected_obj.confidence_score;
+    std::string label = oss.str();
+
+    // Draw the Rectangle
+    cv::rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), box_colour, border_thickness_);
+    
+    // Write the text
+    const auto& [tr, tg, tb] = text_colour_;
+    cv::putText(img, label, cv::Point(x1, y1 - 5), VisualizerDefaults::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
+}

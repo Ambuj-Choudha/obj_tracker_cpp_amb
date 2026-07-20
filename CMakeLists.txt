@@ -7,9 +7,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenCV REQUIRED)
-
-set(SOURCES  
-    src/main.cpp)
+find_package(onnxruntime CONFIG REQUIRED)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # for manually analyzing any of the files using clang-tidy
 
@@ -24,12 +22,31 @@ function(enable_clang_tidy_for target)  # helper fuction for clang tidy
     endif()
 endfunction()
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+# Library of reusable pipeline components (detector, transforms, camera, viz).
+# main.cpp and any test target link against this so we don't rebuild sources.
+add_library(obj_tracker_lib STATIC
+    src/camera.cpp
+    src/detector.cpp
+    src/engine.cpp
+    src/transforms.cpp
+    src/visualization.cpp)
 
-enable_clang_tidy_for(${PROJECT_NAME})
-
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(obj_tracker_lib PUBLIC
     ${OpenCV_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+target_link_libraries(obj_tracker_lib PUBLIC ${OpenCV_LIBS} onnxruntime::onnxruntime)
+
+enable_clang_tidy_for(obj_tracker_lib)
+
+add_executable(${PROJECT_NAME} src/main.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE obj_tracker_lib)
+enable_clang_tidy_for(${PROJECT_NAME})
+
+# Tests
+option(BUILD_TESTS "Build test executables" ON)
+if(BUILD_TESTS)
+    add_executable(test_detector tests/test_detector.cpp)
+    target_link_libraries(test_detector PRIVATE obj_tracker_lib)
+    target_compile_definitions(test_detector PRIVATE PROJECT_ROOT="${CMAKE_SOURCE_DIR}")
+endif()
