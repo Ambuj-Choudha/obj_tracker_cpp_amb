@@ -47,8 +47,9 @@ InferenceEngine::Output InferenceEngine::infer(const float* input, size_t input_
 
     auto shape = last_output_.GetTensorTypeAndShapeInfo().GetShape();
     // Expected: [1, N, K] — squeeze the leading batch dim.
-    return Output{last_output_.GetTensorData<float>(),
-        shape[1],
-        shape[2],
+    if (shape.size() != 3 || shape[0] != 1) {
+        throw std::runtime_error("Unexpected model output shape (expected [1,N,K])");
+    }
+    return Output{last_output_.GetTensorData<float>(), shape[1], shape[2]};
     };
 }
