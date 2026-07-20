@@ -1,19 +1,16 @@
 #include "detector.hpp"
 #include "common/types.hpp"
+
 #include <opencv2/dnn.hpp>
 
 YOLOv10DetectorONNX::YOLOv10DetectorONNX(
     const std::string& model_path, double confidence_threshold)
-    : model_path_{model_path},
-      confidence_threshold_{confidence_threshold} {
-    net_ = cv::dnn::readNetFromONNX(model_path_);
-}
+    : confidence_threshold_{confidence_threshold}, engine_{model_path} {}
 
 std::vector<Data::Detection> YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
     auto [preprocessed_frame, scale, dw, dh] = this->preprocess_frames_(frame);
-    auto raw_outputs = this->predict_(preprocessed_frame);
-    auto detections = this->postprocess_frames_(raw_outputs, scale, dw, dh);
-    return detections;
+    auto raw_outputs = engine_.infer(preprocessed_frame.ptr<float>(), preprocessed_frame.total());
+    return this->postprocess_frames_(raw_outputs, scale, dw, dh);
 }
 
 std::tuple<cv::Mat, double, int, int> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
@@ -28,31 +25,21 @@ std::tuple<cv::Mat, double, int, int> YOLOv10DetectorONNX::preprocess_frames_(co
         CV_32F,
         cv::dnn::DNN_LAYOUT_NCHW,
         cv::dnn::DNN_PMODE_NULL,          // letterbox already padded to target size
-        preConfig::LetterboxPaddingColour        // unused when mode is NULL
+        preConfig::LetterboxPaddingColour // unused when mode is NULL
     );
 
     auto blob = cv::dnn::blobFromImageWithParams(letterboxed_frame, imgParams);
     return std::tuple(blob, scale, dw, dh);
 }
 
-cv::Mat YOLOv10DetectorONNX::predict_(const cv::Mat& preprocessed_frame) {
-    this->net_.setInput(preprocessed_frame);
-    cv::Mat raw_outputs = this->net_.forward();
-    return raw_outputs;
-}
-
-
 std::vector<Data::Detection> YOLOv10DetectorONNX::postprocess_frames_(
-    const cv::Mat& raw_outputs, double scale, int dw, int dh) {
+    InferenceEngine::Output raw_outputs, double scale, int dw, int dh) {
     std::vector<Data::Detection> detections;
+    detections.reserve(raw_outputs.rows);
 
-    // YOLOv10 output shape: [1, N, 6]. Each row = [x1, y1, x2, y2, score, class_id]
-    // in 640x640 letterboxed input space, sorted by score descending.
-    
-    int num_det = raw_outputs.size[1];
-
-    for (int i = 0; i < num_det; ++i) {
-        const float* row = raw_outputs.ptr<float>(0, i);
+    // YOLOv10 output rows are sorted by score descending; break early below threshold.
+    for (int64_t i = 0; i < raw_outputs.rows; ++i) {
+        const float* row = raw_outputs.data + i * raw_outputs.cols;
         const double conf = row[4];
 
         // rows are score-sorted, so once we drop below threshold we're done

@@ -3,9 +3,10 @@
 #include <string>
 #include <vector>
 
-#include <opencv2/dnn.hpp>
+#include <opencv2/core.hpp>
 
 #include "common/types.hpp"
+#include "engine.hpp"
 #include "transforms.hpp"
 
 // TODO: Seperate out the runtime constants from the fixed params
@@ -44,11 +45,10 @@ class YOLOv10DetectorONNX : public DetectorBase{
         std::vector<Data::Detection> detect(const Data::Frame& frame) override;
 
     private:
-        std::string model_path_;
         double confidence_threshold_;
-        cv::dnn::Net net_;
+        InferenceEngine engine_;
+
         std::tuple<cv::Mat, double, int, int> preprocess_frames_(const Data::Frame& frame);
-        cv::Mat predict_(const cv::Mat& preprocessed_frame);
-        std::vector<Data::Detection> postprocess_frames_(const cv::Mat& raw_outputs, double scale, int dw, int dh);
+        std::vector<Data::Detection> postprocess_frames_(InferenceEngine::Output raw_outputs, double scale, int dw, int dh);
 };
 
