@@ -4,6 +4,7 @@
 #include<optional>
 // #include<format>
 #include<fstream>
+#include <stdexcept>
 #include<random>
 #include <opencv2/core.hpp>
 #include<opencv2/highgui.hpp>
