@@ -3,10 +3,10 @@
 #include "transforms.hpp"
 #include "detector.hpp"
 
-std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(const Data::Frame& src) {
-    
-    int target_size_width = PreprocessorConfig::target_size;
-    int target_size_height = PreprocessorConfig::target_size;
+std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(const Data::Frame& src, int target_size) {
+
+    int target_size_width = target_size;
+    int target_size_height = target_size;
     auto pad_colour = PreprocessorConfig::LetterboxPaddingColour;
     
     const cv::Mat& img = src.mat;

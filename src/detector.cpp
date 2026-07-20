@@ -5,7 +5,9 @@
 
 YOLOv10DetectorONNX::YOLOv10DetectorONNX(
     const std::string& model_path, double confidence_threshold)
-    : confidence_threshold_{confidence_threshold}, engine_{model_path} {}
+    : confidence_threshold_{confidence_threshold},
+      engine_{model_path},
+      target_size_{static_cast<int>(engine_.input_shape()[2])} {}
 
 std::vector<Data::Detection> YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
     auto [preprocessed_frame, scale, dw, dh] = this->preprocess_frames_(frame);
@@ -15,11 +17,11 @@ std::vector<Data::Detection> YOLOv10DetectorONNX::detect(const Data::Frame& fram
 
 std::tuple<cv::Mat, double, int, int> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
     namespace preConfig = PreprocessorConfig;
-    auto [letterboxed_frame, scale, dw, dh] = preprocess::apply_letterbox_transform(frame);
+    auto [letterboxed_frame, scale, dw, dh] = preprocess::apply_letterbox_transform(frame, target_size_);
 
     cv::dnn::Image2BlobParams imgParams(
         preConfig::rescale_factor,
-        cv::Size(preConfig::target_size, preConfig::target_size),
+        cv::Size(target_size_, target_size_),
         preConfig::mean,
         preConfig::swapRB,
         CV_32F,

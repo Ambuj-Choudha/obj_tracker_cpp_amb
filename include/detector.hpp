@@ -22,7 +22,6 @@ namespace PreprocessorConfig {
     constexpr double rescale_factor = 1.0/255.0;
     inline const cv::Scalar mean{0, 0, 0};
     constexpr bool swapRB = true;
-    constexpr int target_size = 640;
     inline const cv::Scalar LetterboxPaddingColour{114, 114, 114};
     constexpr int interp = cv::INTER_LINEAR;
 }
@@ -47,6 +46,7 @@ class YOLOv10DetectorONNX : public DetectorBase{
     private:
         double confidence_threshold_;
         InferenceEngine engine_;
+        int target_size_;  // cached from engine_.input_shape() at construction
 
         std::tuple<cv::Mat, double, int, int> preprocess_frames_(const Data::Frame& frame);
         std::vector<Data::Detection> postprocess_frames_(InferenceEngine::Output raw_outputs, double scale, int dw, int dh);

@@ -6,7 +6,7 @@
 #include <opencv2/imgproc.hpp>
 
 namespace preprocess{
-    std::tuple<cv::Mat, double, int, int> apply_letterbox_transform(const Data::Frame& src);
+    std::tuple<cv::Mat, double, int, int> apply_letterbox_transform(const Data::Frame& src, int target_size);
 }
 
 namespace postprocess{
