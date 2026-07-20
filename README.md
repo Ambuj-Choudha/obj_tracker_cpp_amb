@@ -56,7 +56,6 @@ The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths
 | Key | Action |
 |-----|--------|
 | `q` / `ESC` | Quit |
-| `s` | Save current frame to disk |
 
 ## TODOs
 
