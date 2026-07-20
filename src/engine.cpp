@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include <stdexcept>
 
 InferenceEngine::InferenceEngine(const std::string& model_path)
     : env_{ORT_LOGGING_LEVEL_WARNING, "InferenceEngine"},
