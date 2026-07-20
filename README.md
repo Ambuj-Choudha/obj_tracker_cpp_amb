@@ -49,7 +49,7 @@ A smoke test for the detector is built by default (disable with `-DBUILD_TESTS=O
 ./build-ninja/test_detector.exe
 ```
 
-The test expects `data/horse.jpg` and the YOLOv10m ONNX model at the paths defined in the test file.
+The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths defined in the test file.
 
 ### Controls
 
