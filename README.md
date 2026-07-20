@@ -9,7 +9,7 @@ Combines YOLOv10m.
 
 ### Prerequisites
 
-- A connected camera (update `DEFAULT_DEVICE_ID` in `src/main.cpp` to match your camera device index)
+- A connected camera (default device id 0; change the argument passed to `WebcamCamera` in `src/main.cpp` to select a different camera device index)
 - YOLOv10 Model (ONNX format) from [Huggingface](https://huggingface.co/onnx-community/yolov10m/tree/main)
 
 ### Compiling the code
