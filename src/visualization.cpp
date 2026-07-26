@@ -69,7 +69,7 @@ void Visualizer::draw_bbox_w_labels_(cv::Mat& img, const Data::Detection& detect
     int x2 = detected_obj.bbox.x2;
     int y2 = detected_obj.bbox.y2;
     int class_id = detected_obj.class_id;
-    
+
     // get the label for the object based on the class ID using the undodered_map 'class_labels_dict_'created earlier, also mention the confidence score. "<class_name> : <conf_score>"
     auto box_colour = this->colour_map_.at(class_id);
     auto class_name = this->class_labels_dict_.at(class_id);
@@ -80,8 +80,37 @@ void Visualizer::draw_bbox_w_labels_(cv::Mat& img, const Data::Detection& detect
 
     // Draw the Rectangle
     cv::rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), box_colour, border_thickness_);
-    
+
     // Write the text
     const auto& [tr, tg, tb] = text_colour_;
     cv::putText(img, label, cv::Point(x1, y1 - 5), VisualizerDefaults::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
+}
+
+void Visualizer::draw_tracked_detections(Data::Frame& frame, const std::vector<Data::TrackedDetection>& tracked) {
+    for (const auto& t : tracked) {
+        this->draw_bbox_w_track_id_(frame.mat, t);
+    }
+}
+
+void Visualizer::draw_bbox_w_track_id_(cv::Mat& img, const Data::TrackedDetection& tracked_obj) {
+    const auto& d = tracked_obj.detection;
+    // Colour by track_id so each tracked object keeps a stable colour across frames.
+    // If class_id was recovered, use the class colour; otherwise fall back to a
+    // colour derived from track_id modulo the palette.
+    cv::Scalar box_colour = (d.class_id >= 0 && colour_map_.count(d.class_id))
+        ? colour_map_.at(d.class_id)
+        : colour_map_.at(static_cast<int>(tracked_obj.track_id % colour_map_.size()));
+
+    std::ostringstream oss;
+    oss << "ID " << tracked_obj.track_id;
+    if (d.class_id >= 0 && class_labels_dict_.count(d.class_id)) {
+        oss << " " << class_labels_dict_.at(d.class_id);
+    }
+    std::string label = oss.str();
+
+    cv::rectangle(img, cv::Point(d.bbox.x1, d.bbox.y1), cv::Point(d.bbox.x2, d.bbox.y2),
+                  box_colour, border_thickness_);
+    const auto& [tr, tg, tb] = text_colour_;
+    cv::putText(img, label, cv::Point(d.bbox.x1, d.bbox.y1 - 5),
+                VisualizerDefaults::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
 }
