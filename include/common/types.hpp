@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <opencv2/core.hpp>
 
 namespace Data{
@@ -20,5 +21,12 @@ namespace Data{
         int class_id;
         double confidence_score;
 
+    };
+
+    struct TrackedDetection{
+        // detection carried forward by the tracker: original detection info
+        // plus a stable id assigned by the tracker across frames
+        Detection detection;
+        std::size_t track_id;
     };
 }
