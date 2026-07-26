@@ -52,5 +52,4 @@ InferenceEngine::Output InferenceEngine::infer(const float* input, size_t input_
         throw std::runtime_error("Unexpected model output shape (expected [1,N,K])");
     }
     return Output{last_output_.GetTensorData<float>(), shape[1], shape[2]};
-    };
 }
