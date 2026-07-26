@@ -8,6 +8,7 @@
 #include "common/types.hpp"
 #include "camera.hpp"
 #include "detector.hpp"
+#include "tracker.hpp"
 #include "visualization.hpp"
 
 int main(int argc, char* argv[]) {
@@ -29,6 +30,7 @@ int main(int argc, char* argv[]) {
         std::string model_path = "assets/model/yolov10m/yolov10m.onnx"s;
 
         auto detector = YOLOv10DetectorONNX(model_path);
+        auto tracker = ByteTrackerAdapter{};
         auto visualizer_obj = Visualizer(2);
 
         while (true) {
@@ -37,7 +39,8 @@ int main(int argc, char* argv[]) {
 
             Data::Frame input_frame{*frame};  // * as frame is of type std::optional
             auto detections_in_current_frame = detector.detect(input_frame);
-            visualizer_obj.draw_detections(input_frame, detections_in_current_frame);
+            auto tracked_in_current_frame = tracker.update(detections_in_current_frame);
+            visualizer_obj.draw_tracked_detections(input_frame, tracked_in_current_frame);
             cv::imshow("Detected Objects", input_frame.mat);
 
             int key = cv::waitKey(1);
