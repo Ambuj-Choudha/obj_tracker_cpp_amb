@@ -12,7 +12,6 @@
 #include "visualization.hpp"
 
 int main(int argc, char* argv[]) {
-    // TODO: add command line parser for changing runtime configs
     std::unique_ptr<IInputSource> source;  // use pointer from base class
 
     if (argc < 2) {
