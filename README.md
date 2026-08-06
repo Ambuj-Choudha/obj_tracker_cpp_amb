@@ -1,4 +1,4 @@
-# object-tracking-cpp
+# General Object Tracker
 
 ## 1.0 Goal
 
@@ -7,46 +7,72 @@ Combines YOLOv10m (detection) with ByteTrack (multi-object tracking).
 
 ## 2.0 Setup
 
-### Prerequisites
+Check all the Dependencies and the build recipe at:
+- System packages → [`.devcontainer/apt-packages.txt`](.devcontainer/apt-packages.txt)
+- Build recipe → [`CMakePresets.json`](CMakePresets.json)
 
-- A connected camera (default device id 0; change the argument passed to `WebcamCamera` in `src/main.cpp` to select a different camera device index)
-- YOLOv10 Model (ONNX format) from [Huggingface](https://huggingface.co/onnx-community/yolov10m/tree/main)
+### Step 1 - Prerequisites
 
-### Compiling the code
+- A connected camera (default device id 0; change the argument passed to `WebcamCamera` in `src/main.cpp` to select a different camera device index).
+- Linux host. (The dev container also works on macOS/Windows via Docker Desktop, though camera + display passthrough are Linux-tested only.)
+- Either **Docker + VS Code Dev Containers extension** (for Step 2A), *or* `sudo` on the host (for Step 2B).
 
-Requires: CMake ≥ 3.10, Ninja, OpenCV (built with gcc), ONNX Runtime, and a C++23-capable compiler.
+The YOLOv10 ONNX model is fetched automatically by both setup paths - no manual download.
 
-On Windows/MSYS2 (UCRT64), install ONNX Runtime with:
+### Step 2A - Dev container (recommended)
+
+Reproducible environment with the toolchain and dependencies pre-installed.
+
+1. Allow the container to reach your X server (once per host boot):
+   ```bash
+   xhost +local:
+   ```
+2. Open the repo in VS Code → **Dev Containers: Reopen in Container**. First build compiles the image and runs [`post-create.sh`](.devcontainer/post-create.sh), which downloads ONNX Runtime and the YOLOv10m model (~65 MB).
+3. Continue with **Step 3 - Build** inside the container terminal.
+
+The container mounts `/dev/video0` and the X11 socket, so the OpenCV preview window and webcam work out of the box. If your camera is on a different device node (e.g. `/dev/video2`), edit `runArgs` in [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json).
+
+### Step 2B - Local install (Linux, alternative)
+
+The setup script installs apt deps, pulls ONNX Runtime into `/opt/onnxruntime`, fetches the model, **and runs the initial build for you**:
+
 ```bash
-pacman -S mingw-w64-ucrt-x86_64-onnxruntime
+./scripts/local_setup.sh
 ```
 
-```bash
-# Configure
-cmake -B build-ninja -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug
-```
-You do not need to mention the compiler explicitly as it will pick it up from Path, if you use the -G flag for Ninja
+The script writes `scripts/local_env.sh`. **Source it in every new shell** before building or running - it points the compiler and loader at ONNX Runtime:
 
 ```bash
-# Build
-cmake --build build-ninja
+source scripts/local_env.sh
 ```
 
-### To run the code
+If the script's initial build succeeded, you can skip Step 3 the first time and go straight to Step 4.
 
-On Windows, launch from the UCRT64 shell so `onnxruntime.dll` and the MinGW runtime DLLs resolve correctly (Windows ships its own ABI-incompatible `onnxruntime.dll` in `SYSTEM32` for Windows ML).
+### Step 3 - Build
+
+Configure and build using the preset defined in [`CMakePresets.json`](CMakePresets.json):
 
 ```bash
-# Run
-./build-ninja/obj_tracker_cpp.exe
+cmake --preset dev
+cmake --build --preset dev
 ```
 
-### Running tests
+This works identically in the dev container (Step 2A) and on a local install (Step 2B, after sourcing `local_env.sh`).
 
-A smoke test for the detector is built by default (disable with `-DBUILD_TESTS=OFF`).
+### Step 4 - Run
+
+From the repo root (asset paths are relative to CWD):
 
 ```bash
-./build-ninja/test_detector.exe
+./build-ninja/obj_tracker_cpp
+```
+
+### Tests
+
+A smoke test for the detector is built by default with the `dev` preset (the `release` preset disables it).
+
+```bash
+./build-ninja/test_detector
 ```
 
 The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths defined in the test file.
@@ -64,8 +90,6 @@ The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths
 - Wrap the detector into a ROS2 Node
 
 ## 3.0 References
-
-- YOLOv10 — https://huggingface.co/onnx-community/yolov10m
-- ByteTrack (C++ port) — https://github.com/Vertical-Beach/ByteTrack-cpp
-
+- [ByteTrack C++ Implementation](https://github.com/Vertical-Beach/ByteTrack-cpp/tree/main)
+- [YOLOv10 ONNX model](https://huggingface.co/onnx-community/yolov10m)
 
