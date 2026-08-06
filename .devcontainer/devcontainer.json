@@ -1,0 +1,30 @@
+{
+    "name": "obj_tracker_cpp",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "remoteUser": "ubuntu",
+    "workspaceFolder": "/workspaces/obj_tracker_cpp_amb",
+    "runArgs": [
+        "--device=/dev/video0",
+        "--env=DISPLAY",
+        "--volume=/tmp/.X11-unix:/tmp/.X11-unix"
+    ],
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "twxs.cmake"
+            ],
+            "settings": {
+                "cmake.useCMakePresets": "always",
+                "cmake.configureOnOpen": false,
+                "C_Cpp.default.compileCommands": "${workspaceFolder}/build-ninja/compile_commands.json"
+            }
+        }
+    }
+}
