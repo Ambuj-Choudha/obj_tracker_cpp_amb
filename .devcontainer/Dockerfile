@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG ONNXRUNTIME_VERSION=1.20.1
@@ -48,7 +48,7 @@ EOF
 ENV CMAKE_PREFIX_PATH=/opt/onnxruntime \
     LD_LIBRARY_PATH=/opt/onnxruntime/lib
 
-# ubuntu:24.04 ships a non-root `ubuntu` user (uid 1000) — grant passwordless sudo.
+# ubuntu:24.04+ ships a non-root `ubuntu` user (uid 1000) — grant passwordless sudo.
 RUN echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu \
     && chmod 0440 /etc/sudoers.d/ubuntu
 
