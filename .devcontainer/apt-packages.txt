@@ -1,0 +1,35 @@
+# apt packages required to build and run obj_tracker_cpp.
+# Consumed by:
+#   - .devcontainer/Dockerfile (baked into the image)
+#   - README "Local install" instructions (installed manually)
+# Keep one package per line. Lines starting with '#' and blank lines are ignored.
+
+# --- toolchain ---
+build-essential
+gcc-14
+g++-14
+cmake
+ninja-build
+pkg-config
+git
+curl
+ca-certificates
+
+# --- static analysis / IDE ---
+clang-tidy
+clangd
+gdb
+
+# --- project dependencies ---
+libopencv-dev
+libeigen3-dev
+
+# --- OpenCV runtime / X11 (needed for cv::imshow) ---
+libgl1
+libglib2.0-0
+libsm6
+libxext6
+libxrender1
+
+# --- webcam tooling ---
+v4l-utils
