@@ -9,8 +9,7 @@
     "runArgs": [
         "--device=/dev/video0",
         "--env=DISPLAY",
-        "--volume=/tmp/.X11-unix:/tmp/.X11-unix",
-        "--network=host"
+        "--volume=/tmp/.X11-unix:/tmp/.X11-unix"
     ],
     "postCreateCommand": "bash .devcontainer/post-create.sh",
     "customizations": {
