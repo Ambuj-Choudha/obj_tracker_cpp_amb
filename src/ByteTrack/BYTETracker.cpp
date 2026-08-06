@@ -522,9 +522,9 @@ double byte_track::BYTETracker::execLapjv(const std::vector<std::vector<float>> 
     }
 
     double **cost_ptr;
-    cost_ptr = new double *[sizeof(double *) * n];
+    cost_ptr = new double *[n];
     for (int i = 0; i < n; i++)
-        cost_ptr[i] = new double[sizeof(double) * n];
+        cost_ptr[i] = new double[n];
 
     for (int i = 0; i < n; i++)
     {
@@ -534,8 +534,8 @@ double byte_track::BYTETracker::execLapjv(const std::vector<std::vector<float>> 
         }
     }
 
-    int* x_c = new int[sizeof(int) * n];
-    int *y_c = new int[sizeof(int) * n];
+    int* x_c = new int[n];
+    int *y_c = new int[n];
 
     int ret = lapjv_internal(n, cost_ptr, x_c, y_c);
     if (ret != 0)
