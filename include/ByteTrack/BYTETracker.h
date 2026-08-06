@@ -52,8 +52,8 @@ private:
                           const int &cost_matrix_size_size,
                           const float &thresh,
                           std::vector<std::vector<int>> &matches,
-                          std::vector<int> &b_unmatched,
-                          std::vector<int> &a_unmatched) const;
+                          std::vector<int> &a_unmatched,
+                          std::vector<int> &b_unmatched) const;
 
     std::vector<std::vector<float>> calcIouDistance(const std::vector<STrackPtr> &a_tracks,
                                                     const std::vector<STrackPtr> &b_tracks) const;
