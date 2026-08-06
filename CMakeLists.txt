@@ -1,5 +1,5 @@
 # cmake needs this line
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.21)  # required for CMakePresets.json v3
 
 project(obj_tracker_cpp)  # automatically sets var $PROJECT_NAME
 
