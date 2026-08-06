@@ -3,6 +3,7 @@
 ## 1.0 Goal
 
 Real-time object detection and tracking pipeline using C++.
+Combines YOLOv10m (detection) with ByteTrack (multi-object tracking).
 
 ## 2.0 Setup
 
@@ -84,8 +85,9 @@ The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths
 
 ## TODOs
 
-- Add possibility to run inference on image & batch of images
-- Add a tracker on top of the detector
+- Add command line parser for changing runtime configs
+- Add Docker for reproducible environment
+- Wrap the detector into a ROS2 Node
 
 ## 3.0 References
 - [ByteTrack C++ Implementation](https://github.com/Vertical-Beach/ByteTrack-cpp/tree/main)

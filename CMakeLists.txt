@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenCV REQUIRED)
 find_package(onnxruntime CONFIG REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # for manually analyzing any of the files using clang-tidy
 
@@ -22,20 +23,39 @@ function(enable_clang_tidy_for target)  # helper fuction for clang tidy
     endif()
 endfunction()
 
-# Library of reusable pipeline components (detector, transforms, camera, viz).
+# Library of reusable pipeline components (detector, transforms, camera, viz) along with the tracker.
+# ByteTrack Kept as its own static lib so ByteTrack's Eigen dependency stays isolated
+# and clang-tidy runs on our code only, not on third-party sources.
+add_library(bytetrack STATIC
+    src/ByteTrack/BYTETracker.cpp
+    src/ByteTrack/KalmanFilter.cpp
+    src/ByteTrack/Object.cpp
+    src/ByteTrack/Rect.cpp
+    src/ByteTrack/STrack.cpp
+    src/ByteTrack/lapjv.cpp)
+
+target_include_directories(bytetrack PUBLIC
+    ${CMAKE_SOURCE_DIR}/include)
+
+target_link_libraries(bytetrack PUBLIC Eigen3::Eigen)
+
+# Library of reusable pipeline components (detector, transforms, camera, viz, tracker).
 # main.cpp and any test target link against this so we don't rebuild sources.
 add_library(obj_tracker_lib STATIC
     src/camera.cpp
     src/detector.cpp
     src/engine.cpp
     src/transforms.cpp
+    src/tracker.cpp
     src/visualization.cpp)
 
 target_include_directories(obj_tracker_lib PUBLIC
     ${OpenCV_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include)
 
-target_link_libraries(obj_tracker_lib PUBLIC ${OpenCV_LIBS} onnxruntime::onnxruntime)
+target_link_libraries(obj_tracker_lib
+    PUBLIC ${OpenCV_LIBS} onnxruntime::onnxruntime
+    PRIVATE bytetrack)
 
 enable_clang_tidy_for(obj_tracker_lib)
 

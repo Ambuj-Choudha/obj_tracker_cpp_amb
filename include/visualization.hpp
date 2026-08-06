@@ -25,6 +25,7 @@ class Visualizer{
         Visualizer(int border_thickness, std::optional<std::tuple<int, int, int>> text_colour = std::nullopt);
 
         void draw_detections(Data::Frame& frame, const std::vector<Data::Detection>& detections);
+        void draw_tracked_detections(Data::Frame& frame, const std::vector<Data::TrackedDetection>& tracked);
         void set_font_scale(double new_font_scale);
     private:
         int border_thickness_;
@@ -33,7 +34,8 @@ class Visualizer{
 
         // define from the asset/coco.names
         const std::unordered_map<int, std::string> class_labels_dict_;
-        
+
         const std::unordered_map<int, cv::Scalar> colour_map_;
         void draw_bbox_w_labels_(cv::Mat& img, const Data::Detection& detected_obj);
+        void draw_bbox_w_track_id_(cv::Mat& img, const Data::TrackedDetection& tracked_obj);
 };
