@@ -3,20 +3,37 @@
 
 #include <opencv2/dnn.hpp>
 
-YOLOv10DetectorONNX::YOLOv10DetectorONNX(
-    const std::string& model_path, double confidence_threshold)
-    : confidence_threshold_{confidence_threshold},
-      engine_{model_path},
-      target_size_{static_cast<int>(engine_.input_shape()[2])} {}
+namespace {
+    constexpr const char* kBlobOutOfMemoryCause = "out of memory building preprocess blob";
 
-std::vector<Data::Detection> YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
-    auto [preprocessed_frame, scale, dw, dh] = this->preprocess_frames_(frame);
-    auto raw_outputs = engine_.infer(preprocessed_frame.ptr<float>(), preprocessed_frame.total());
-    return this->postprocess_frames_(raw_outputs, scale, dw, dh);
+    bool is_out_of_memory(const cv::Exception& preprocess_error) noexcept {
+        return preprocess_error.code == cv::Error::StsNoMem;
+    }
 }
 
-std::tuple<cv::Mat, double, int, int> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
+YOLOv10DetectorONNX::YOLOv10DetectorONNX(
+    const std::string& model_path, double confidence_threshold, int retry_budget)
+    : confidence_threshold_{confidence_threshold},
+      engine_{model_path},
+      target_size_{static_cast<int>(engine_.input_shape()[2])},
+      retry_monitor_{Status::Stage::Preprocess, retry_budget} {}
+
+Status::Result<std::vector<Data::Detection>>
+YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
+    auto preprocessed_frame = this->preprocess_frames_(frame);
+    if (!preprocessed_frame) {
+        return std::unexpected(preprocessed_frame.error());  // drop this frame, keep the loop alive
+    }
+    retry_monitor_.record_success();  // one good frame resets the monitor
+
+    auto raw_outputs = engine_.infer(preprocessed_frame->blob.ptr<float>(), preprocessed_frame->blob.total());
+    return this->postprocess_frames_(raw_outputs, preprocessed_frame->scale, preprocessed_frame->dw, preprocessed_frame->dh);
+}
+
+Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
     namespace preConfig = PreprocessorConfig;
+
+    try {
     auto [letterboxed_frame, scale, dw, dh] = preprocess::apply_letterbox_transform(frame, target_size_);
 
     cv::dnn::Image2BlobParams imgParams(
@@ -31,7 +48,13 @@ std::tuple<cv::Mat, double, int, int> YOLOv10DetectorONNX::preprocess_frames_(co
     );
 
     auto blob = cv::dnn::blobFromImageWithParams(letterboxed_frame, imgParams);
-    return std::tuple(blob, scale, dw, dh);
+    return LetterboxedBlob{blob, scale, dw, dh};
+    } catch (const cv::Exception& preprocess_error) {
+        if (is_out_of_memory(preprocess_error)) {
+            return std::unexpected(retry_monitor_.record_failure(kBlobOutOfMemoryCause, "preprocess"));
+        }
+        throw;  // any other cv::Exception is not a modelled in this stage
+    }
 }
 
 std::vector<Data::Detection> YOLOv10DetectorONNX::postprocess_frames_(
