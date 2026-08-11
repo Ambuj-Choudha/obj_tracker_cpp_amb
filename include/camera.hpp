@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 
+#include "common/retry_monitor.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
 
@@ -38,28 +39,26 @@ class VideoCaptureBase : public IInputSource {
         Status::SourceState getSourceState() const noexcept override { return source_state_; }
 
     protected:
+        explicit VideoCaptureBase(int retry_budget)
+            : retry_monitor_{Status::Stage::Source, retry_budget} {}
+
         cv::VideoCapture cap;
 
-        int consecutive_failures_{0};
+        RetryMonitor retry_monitor_;
         Status::SourceState source_state_{Status::SourceState::Streaming};
 
-        // recoverable_cause is const char* rather than string_view on purpose:
+        // message is const char* rather than string_view on purpose:
         // it has to be a literal (it ends up in a non-owning view)
-        Status::Error record_failure(int retry_budget, const char* recoverable_cause, std::string_view subject) {
-            ++consecutive_failures_;
+        Status::Error record_failure(const char* message, std::string_view operation) {
+            auto error = retry_monitor_.record_failure(message, operation);
 
-            if (consecutive_failures_ > retry_budget) {
-                source_state_ = Status::SourceState::Failed;
-                return Status::Fatal{Status::Stage::Source, std::format("{} unrecoverable after {} consecutive failed reads",
-                                subject, consecutive_failures_)};
-            }
-
-            source_state_ = Status::SourceState::DisconnectedRetrying;
-            return Status::Recoverable{Status::Stage::Source, recoverable_cause, consecutive_failures_};
+            source_state_ = retry_monitor_.exhausted() ? Status::SourceState::Failed
+                                                      : Status::SourceState::DisconnectedRetrying;
+            return error;
         }
 
         void record_success() {
-            consecutive_failures_ = 0;
+            retry_monitor_.record_success();
             source_state_ = Status::SourceState::Streaming;
         }
 
@@ -91,7 +90,6 @@ class WebcamCamera : public VideoCaptureBase {
     private:
         int deviceID;
         int apiID;
-        int retry_budget_;  // policy lives on the component, never on the error
 };
 
 class VideoFile : public VideoCaptureBase {
@@ -108,5 +106,4 @@ class VideoFile : public VideoCaptureBase {
     private:
         std::string source_file;
         int apiID;
-        int retry_budget_;
 };

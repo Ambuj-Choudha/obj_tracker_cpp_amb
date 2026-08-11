@@ -22,7 +22,7 @@ namespace {
 }
 
 WebcamCamera::WebcamCamera(int deviceID, int apiID, int retry_budget)
-    : deviceID{deviceID}, apiID{apiID}, retry_budget_{retry_budget} {
+    : VideoCaptureBase{retry_budget}, deviceID{deviceID}, apiID{apiID} {
 
     cap.open(deviceID, apiID);
     if (!cap.isOpened()) {
@@ -46,13 +46,13 @@ auto WebcamCamera::getNextFrame() -> Status::Result<Data::Frame> {
         read_img_ok = cap.read(frame);
     } catch (const cv::Exception& capture_error) {
         if (is_out_of_memory(capture_error)) {
-            return std::unexpected(record_failure(retry_budget_, kOutOfMemoryCause, "camera frame allocation"));
+            return std::unexpected(record_failure(kOutOfMemoryCause, "camera frame allocation"));
         }
         throw;  // any other cv::Exception is not a modelled in this stage
     }
 
     if (!read_img_ok || frame.empty()) {
-        return std::unexpected(record_failure(retry_budget_, kEmptyFrameCause, "camera"));
+        return std::unexpected(record_failure(kEmptyFrameCause, "camera"));
     }
 
     record_success();
@@ -62,7 +62,7 @@ auto WebcamCamera::getNextFrame() -> Status::Result<Data::Frame> {
 }
 
 VideoFile::VideoFile(const std::string& source_file, int apiID, int retry_budget)
-    : source_file{source_file}, apiID{apiID}, retry_budget_{retry_budget} {
+    : VideoCaptureBase{retry_budget}, source_file{source_file}, apiID{apiID} {
 
     cap.open(source_file, apiID);
     if (!cap.isOpened()) {
@@ -85,7 +85,7 @@ auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
         read_file_ok = cap.read(frame);
     } catch (const cv::Exception& capture_error) {
         if (is_out_of_memory(capture_error)) {
-            return std::unexpected(record_failure(retry_budget_, kOutOfMemoryCause, "video frame allocation"));
+            return std::unexpected(record_failure(kOutOfMemoryCause, "video frame allocation"));
         }
         throw;
     }
@@ -97,7 +97,7 @@ auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
     }
 
     if (frame.empty()) {
-        return std::unexpected(record_failure(retry_budget_, kDecodeFailedCause, "video decode"));
+        return std::unexpected(record_failure(kDecodeFailedCause, "video decode"));
     }
 
     record_success();
