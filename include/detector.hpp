@@ -17,7 +17,8 @@
 struct DetectorDefaults{
     static constexpr double ConfThreshold = 0.5;
     static constexpr int num_classes = 80;
-    static constexpr int RetryBudget = 10;
+    static constexpr int PreprocessRetryBudget = 10;
+    static constexpr int InferenceRetryBudget  = 10;
 };
 
 // TODO: understand when to use inline const and when constexpr
@@ -39,7 +40,8 @@ class DetectorBase{
 class YOLOv10DetectorONNX : public DetectorBase{
     public:
         YOLOv10DetectorONNX(const std::string& model_path, double confidence_threshold = DetectorDefaults::ConfThreshold,
-                            int retry_budget = DetectorDefaults::RetryBudget);
+                            int preprocess_retry_budget = DetectorDefaults::PreprocessRetryBudget,
+                            int inference_retry_budget = DetectorDefaults::InferenceRetryBudget);
         YOLOv10DetectorONNX(const YOLOv10DetectorONNX&) = delete;
         YOLOv10DetectorONNX& operator=(const YOLOv10DetectorONNX&) = delete;
         YOLOv10DetectorONNX(YOLOv10DetectorONNX&&) = delete;
@@ -51,7 +53,9 @@ class YOLOv10DetectorONNX : public DetectorBase{
         double confidence_threshold_;
         InferenceEngine engine_;
         int target_size_;  // cached from engine_.input_shape() at construction
-        RetryMonitor retry_monitor_;
+
+        RetryMonitor preprocess_monitor_;
+        RetryMonitor inference_monitor_;
 
         // letterboxed Blob amd the parameters postprocess needs for inversion
         struct LetterboxedBlob {

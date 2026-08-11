@@ -5,6 +5,7 @@
 
 namespace {
     constexpr const char* kBlobOutOfMemoryCause = "out of memory building preprocess blob";
+    constexpr const char* kInferenceFailedCause = "inference run failed for this frame";
 
     bool is_out_of_memory(const cv::Exception& preprocess_error) noexcept {
         return preprocess_error.code == cv::Error::StsNoMem;
@@ -12,11 +13,13 @@ namespace {
 }
 
 YOLOv10DetectorONNX::YOLOv10DetectorONNX(
-    const std::string& model_path, double confidence_threshold, int retry_budget)
+    const std::string& model_path, double confidence_threshold,
+    int preprocess_retry_budget, int inference_retry_budget)
     : confidence_threshold_{confidence_threshold},
       engine_{model_path},
       target_size_{static_cast<int>(engine_.input_shape()[2])},
-      retry_monitor_{Status::Stage::Preprocess, retry_budget} {}
+      preprocess_monitor_{Status::Stage::Preprocess, preprocess_retry_budget},
+      inference_monitor_{Status::Stage::Inference, inference_retry_budget} {}
 
 Status::Result<std::vector<Data::Detection>>
 YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
@@ -24,10 +27,15 @@ YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
     if (!preprocessed_frame) {
         return std::unexpected(preprocessed_frame.error());  // drop this frame, keep the loop alive
     }
-    retry_monitor_.record_success();  // one good frame resets the monitor
+    preprocess_monitor_.record_success();
 
     auto raw_outputs = engine_.infer(preprocessed_frame->blob.ptr<float>(), preprocessed_frame->blob.total());
-    return this->postprocess_frames_(raw_outputs, preprocessed_frame->scale, preprocessed_frame->dw, preprocessed_frame->dh);
+    if (!raw_outputs) {
+        return std::unexpected(inference_monitor_.record_failure(kInferenceFailedCause, "inference"));
+    }
+    inference_monitor_.record_success();
+
+    return this->postprocess_frames_(*raw_outputs, preprocessed_frame->scale, preprocessed_frame->dw, preprocessed_frame->dh);
 }
 
 Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
@@ -51,7 +59,7 @@ Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::prepro
     return LetterboxedBlob{blob, scale, dw, dh};
     } catch (const cv::Exception& preprocess_error) {
         if (is_out_of_memory(preprocess_error)) {
-            return std::unexpected(retry_monitor_.record_failure(kBlobOutOfMemoryCause, "preprocess"));
+            return std::unexpected(preprocess_monitor_.record_failure(kBlobOutOfMemoryCause, "preprocess"));
         }
         throw;  // any other cv::Exception is not a modelled in this stage
     }
