@@ -8,42 +8,67 @@
 
 // include the interface file
 #include "camera.hpp"
+#include "common/status.hpp"
 
+namespace {
+    constexpr const char* kEmptyFrameCause = "capture returned an empty frame; device may be disconnected";
+    constexpr const char* kDecodeFailedCause = "frame decode failed mid-stream";
+    constexpr const char* kOutOfMemoryCause = "out of memory allocating frame buffer";
 
-WebcamCamera::WebcamCamera(int deviceID, int apiID) : deviceID{deviceID}, apiID{apiID} {
-    
+    // allocation failure surfaces as cv::Exception with code StsNoMem, not std::bad_alloc
+    bool is_out_of_memory(const cv::Exception& capture_error) noexcept {
+        return capture_error.code == cv::Error::StsNoMem;
+    }
+}
+
+WebcamCamera::WebcamCamera(int deviceID, int apiID, int retry_budget)
+    : deviceID{deviceID}, apiID{apiID}, retry_budget_{retry_budget} {
+
     cap.open(deviceID, apiID);
     if (!cap.isOpened()) {
-        throw std::runtime_error(std::format("Error: Could not open camera with deviceID: {} \n", deviceID));
+        throw Status::FatalException(Status::Fatal{
+            Status::Stage::Source,
+            std::format("Error: Could not open camera with deviceID: {}", deviceID)});
     }
     std::cout << "Camera initialized successfully!\n";
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);    
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, CameraDefaults::FrameDefaultWidth);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, CameraDefaults::FrameDefaultHeight);
 
     std::cout << "Frame Width: " << cap.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
     std::cout << "Frame Height: " << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
 
-auto WebcamCamera::getNextFrame() -> std::optional<cv::Mat> { // std::optional for matching signature of base class
+auto WebcamCamera::getNextFrame() -> Status::Result<Data::Frame> {
     cv::Mat frame;
-    bool read_img_ok = cap.read(frame);
-    if (!read_img_ok) {
-        throw std::runtime_error("cap.read() failed, device maybe disconnected");
+    bool read_img_ok = false;
+
+    try {
+        read_img_ok = cap.read(frame);
+    } catch (const cv::Exception& capture_error) {
+        if (is_out_of_memory(capture_error)) {
+            return std::unexpected(record_failure(retry_budget_, kOutOfMemoryCause, "camera frame allocation"));
+        }
+        throw;  // any other cv::Exception is not a modelled in this stage
     }
-    if (frame.empty()) {
-        throw std::runtime_error("cap.read() succeeded but returned an empty frame. The camera may not be delivering images.");
+
+    if (!read_img_ok || frame.empty()) {
+        return std::unexpected(record_failure(retry_budget_, kEmptyFrameCause, "camera"));
     }
-    
+
+    record_success();
     updateFps();
 
-    return frame;
+    return Data::Frame{frame};
 }
 
-VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{source_file}, apiID{apiID} {
-    
+VideoFile::VideoFile(const std::string& source_file, int apiID, int retry_budget)
+    : source_file{source_file}, apiID{apiID}, retry_budget_{retry_budget} {
+
     cap.open(source_file, apiID);
     if (!cap.isOpened()) {
-        throw std::runtime_error(std::format("ERROR: Unable to open source file '{}'. Please check the file path and format.", source_file));
+        throw Status::FatalException(Status::Fatal{
+            Status::Stage::Source,
+            std::format("ERROR: Unable to open source file '{}'. Please check the file path and format.", source_file)});
     }
     cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, CameraDefaults::FrameDefaultHeight);
@@ -52,18 +77,31 @@ VideoFile::VideoFile(const std::string& source_file, int apiID) : source_file{so
     std::cout << "Frame Height: " << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
 
-auto VideoFile::getNextFrame() -> std::optional<cv::Mat> {
+auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
     cv::Mat frame;
-    bool read_file_ok = cap.read(frame);
+    bool read_file_ok = false;
 
-    if(!read_file_ok){
-        return std::nullopt;
-    }
-    if(frame.empty()){
-        throw std::runtime_error("Frame read was successful but the frame is empty. The video file may be corrupted or at EOF.");
+    try {
+        read_file_ok = cap.read(frame);
+    } catch (const cv::Exception& capture_error) {
+        if (is_out_of_memory(capture_error)) {
+            return std::unexpected(record_failure(retry_budget_, kOutOfMemoryCause, "video frame allocation"));
+        }
+        throw;
     }
 
+    if (!read_file_ok) {
+        // Stream ended as intended: not a failure, caller learns this from getSourceState()
+        source_state_ = Status::SourceState::EndOfStream;
+        return Data::Frame{};
+    }
+
+    if (frame.empty()) {
+        return std::unexpected(record_failure(retry_budget_, kDecodeFailedCause, "video decode"));
+    }
+
+    record_success();
     updateFps();
 
-    return frame;
+    return Data::Frame{frame};
 }
