@@ -17,6 +17,9 @@ struct TrackerDefaults {
     static constexpr float track_thresh = 0.5f;
     static constexpr float high_thresh  = 0.6f;
     static constexpr float match_thresh = 0.8f;
+
+    // Min IoU before a track's class_id is recovered from a detection
+    static constexpr float class_recovery_min_iou = 0.5f;
 };
 
 class ByteTrackerAdapter {

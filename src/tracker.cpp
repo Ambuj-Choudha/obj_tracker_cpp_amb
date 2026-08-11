@@ -80,7 +80,7 @@ ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
         };
 
         int recovered_class = -1;
-        float best_iou = 0.5f;  // require reasonable overlap to trust the recovery
+        float best_iou = TrackerDefaults::class_recovery_min_iou;  // require reasonable overlap to trust the recovery
         for (const auto& d : detections) {
             const float iou = iou_bbox_rect(d.bbox, r);
             if (iou > best_iou) {
