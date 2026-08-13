@@ -9,6 +9,8 @@
 #include "ByteTrack/STrack.h"
 
 namespace {
+    constexpr const char* kSolverFailedCause = "tracker assignment solve failed for this frame";
+
     // IoU between a Data::BBox (tlbr int) and a byte_track::Rect<float> (tlwh).
     float iou_bbox_rect(const Data::BBox& b, const byte_track::Rect<float>& r) {
         const float ax1 = static_cast<float>(b.x1);
@@ -44,11 +46,12 @@ ByteTrackerAdapter::ByteTrackerAdapter(int frame_rate,
                                                      track_buffer,
                                                      track_thresh,
                                                      high_thresh,
-                                                     match_thresh)} {}
+                                                     match_thresh)},
+      retry_monitor_{Status::Stage::Tracking, TrackerDefaults::RetryBudget} {}
 
 ByteTrackerAdapter::~ByteTrackerAdapter() = default;
 
-std::vector<Data::TrackedDetection>
+Status::Result<std::vector<Data::TrackedDetection>>
 ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
     // 1) Detection -> byte_track::Object (tlwh + label + prob)
     std::vector<byte_track::Object> objects;
@@ -63,7 +66,13 @@ ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
     }
 
     // 2) Run tracker
-    auto tracks = impl_->update(objects);
+    std::vector<byte_track::BYTETracker::STrackPtr> tracks;
+    try {
+        tracks = impl_->update(objects);
+    } catch (const std::runtime_error&) {
+        return std::unexpected(retry_monitor_.record_failure(kSolverFailedCause, "tracker assignment solve"));
+    }
+    retry_monitor_.record_success();
 
     // 3) STrack -> TrackedDetection; recover class_id by best-IoU match
     //    against this frame's input detections (ByteTrack is class-agnostic).

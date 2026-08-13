@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "common/retry_monitor.hpp"
+#include "common/status.hpp"
 #include "common/types.hpp"
 
 // Forward declaration so users of tracker.hpp don't have to pull in
@@ -20,6 +22,8 @@ struct TrackerDefaults {
 
     // Min IoU before a track's class_id is recovered from a detection
     static constexpr float class_recovery_min_iou = 0.5f;
+
+    static constexpr int RetryBudget = 5;
 };
 
 class ByteTrackerAdapter {
@@ -34,13 +38,10 @@ class ByteTrackerAdapter {
         ByteTrackerAdapter(ByteTrackerAdapter&&) = delete;
         ~ByteTrackerAdapter();
 
-        // Runs one frame of tracking. Detections go in as-is (pixel coords);
-        // returned TrackedDetection carries a track_id stable across frames.
-        // Class id is recovered by IoU-matching each output track back to
-        // the input detections (ByteTrack itself is class-agnostic and drops
-        // the label internally).
-        std::vector<Data::TrackedDetection> update(const std::vector<Data::Detection>& detections);
+        // Per-frame, so a failed solve drops the frame and continues
+        Status::Result<std::vector<Data::TrackedDetection>> update(const std::vector<Data::Detection>& detections);
 
     private:
         std::unique_ptr<byte_track::BYTETracker> impl_;
+        RetryMonitor retry_monitor_;
 };
