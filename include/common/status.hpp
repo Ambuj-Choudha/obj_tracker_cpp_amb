@@ -44,12 +44,6 @@ private:
     Fatal error_;
 };
 
-// Degraded o/p isn't an error, the value came through fine, it just carries a state
 enum class SourceState { Streaming, EndOfStream, DisconnectedRetrying, Failed };
-
-// Unused so far: BYTETracker::update() only returns activated, matched tracks,
-// so a TrackedDetection could only ever be Confirmed. Surfacing the others
-// needs the adapter to expose lost tracks first.
-enum class TrackState { Tentative, Confirmed, Coasting, Lost };
 
 }
