@@ -45,6 +45,7 @@ add_library(obj_tracker_lib STATIC
     src/camera.cpp
     src/detector.cpp
     src/engine.cpp
+    src/reporting.cpp
     src/transforms.cpp
     src/tracker.cpp
     src/visualization.cpp)
@@ -69,4 +70,8 @@ if(BUILD_TESTS)
     add_executable(test_detector tests/test_detector.cpp)
     target_link_libraries(test_detector PRIVATE obj_tracker_lib)
     target_compile_definitions(test_detector PRIVATE PROJECT_ROOT="${CMAKE_SOURCE_DIR}")
+
+    add_executable(test_visualizer tests/test_visualizer.cpp)
+    target_link_libraries(test_visualizer PRIVATE obj_tracker_lib)
+    target_compile_definitions(test_visualizer PRIVATE PROJECT_ROOT="${CMAKE_SOURCE_DIR}")
 endif()
