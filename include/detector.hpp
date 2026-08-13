@@ -19,6 +19,7 @@ struct DetectorDefaults{
     static constexpr int num_classes = 80;
     static constexpr int PreprocessRetryBudget = 10;
     static constexpr int InferenceRetryBudget  = 10;
+    static constexpr int PostprocessRetryBudget = 10;
 
     // YOLOv10 emits one row per detection as [x1, y1, x2, y2, score, class_id].
     // postprocess_frames_ indexes row[0]..row[5], declare default for verifying o/p shape
@@ -45,7 +46,8 @@ class YOLOv10DetectorONNX : public DetectorBase{
     public:
         YOLOv10DetectorONNX(const std::string& model_path, double confidence_threshold = DetectorDefaults::ConfThreshold,
                             int preprocess_retry_budget = DetectorDefaults::PreprocessRetryBudget,
-                            int inference_retry_budget = DetectorDefaults::InferenceRetryBudget);
+                            int inference_retry_budget = DetectorDefaults::InferenceRetryBudget,
+                            int postprocess_retry_budget = DetectorDefaults::PostprocessRetryBudget);
         YOLOv10DetectorONNX(const YOLOv10DetectorONNX&) = delete;
         YOLOv10DetectorONNX& operator=(const YOLOv10DetectorONNX&) = delete;
         YOLOv10DetectorONNX(YOLOv10DetectorONNX&&) = delete;
@@ -60,6 +62,7 @@ class YOLOv10DetectorONNX : public DetectorBase{
 
         RetryMonitor preprocess_monitor_;
         RetryMonitor inference_monitor_;
+        RetryMonitor postprocess_monitor_;
 
         // letterboxed Blob amd the parameters postprocess needs for inversion
         struct LetterboxedBlob {
@@ -70,6 +73,6 @@ class YOLOv10DetectorONNX : public DetectorBase{
         };
 
         Status::Result<LetterboxedBlob> preprocess_frames_(const Data::Frame& frame);
-        std::vector<Data::Detection> postprocess_frames_(InferenceEngine::Output raw_outputs, double scale, int dw, int dh);
+        Status::Result<std::vector<Data::Detection>> postprocess_frames_(InferenceEngine::Output raw_outputs, double scale, int dw, int dh);
 };
 
