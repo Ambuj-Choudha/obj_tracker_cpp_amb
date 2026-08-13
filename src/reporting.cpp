@@ -15,7 +15,6 @@ constexpr std::string_view stage_name(Status::Stage stage) {
     return "Unknown";
 }
 
-// True only when this stage is due for another warning based on reporting freq
 bool ConsoleReporter::start_new_warning_interval_(Status::Stage origin) {
     const auto now = Clock::now();
     auto& last_warned = last_recoverable_.at(static_cast<std::size_t>(origin));
