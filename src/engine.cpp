@@ -69,7 +69,13 @@ Status::Result<InferenceEngine::Output> InferenceEngine::infer(const float* inpu
     auto shape = last_output_.GetTensorTypeAndShapeInfo().GetShape();
     // Expected: [1, N, K] — squeeze the leading batch dim.
     if (shape.size() != 3 || shape[0] != 1) {
-        throw std::runtime_error("Unexpected model output shape (expected [1,N,K])");
+        std::string actual;
+        for (std::size_t i = 0; i < shape.size(); ++i) {
+            actual += (i ? "," : "") + std::to_string(shape[i]);
+        }
+        throw Status::FatalException(Status::Fatal{
+            Status::Stage::Postprocess,
+            std::format("unexpected model output shape [{}]: expected [1,N,K]", actual)});
     }
     return Output{last_output_.GetTensorData<float>(), shape[1], shape[2]};
 }

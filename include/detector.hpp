@@ -19,6 +19,10 @@ struct DetectorDefaults{
     static constexpr int num_classes = 80;
     static constexpr int PreprocessRetryBudget = 10;
     static constexpr int InferenceRetryBudget  = 10;
+
+    // YOLOv10 emits one row per detection as [x1, y1, x2, y2, score, class_id].
+    // postprocess_frames_ indexes row[0]..row[5], declare default for verifying o/p shape
+    static constexpr int64_t OutputFieldsPerRow = 6;
 };
 
 // TODO: understand when to use inline const and when constexpr
