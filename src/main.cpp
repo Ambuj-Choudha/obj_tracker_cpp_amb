@@ -40,6 +40,11 @@ int main(int argc, char* argv[]) {
         auto visualizer_obj = Visualizer(2);
 
         while (true) {
+            int key = cv::waitKey(1);
+            if (key == 'q' || key == 'Q' || key == 27) {
+                break;
+            }
+
             auto frame = source->getNextFrame();
 
             // EOF: Check before unwrapping
@@ -82,11 +87,6 @@ int main(int argc, char* argv[]) {
 
             visualizer_obj.draw_tracked_detections(input_frame, *tracked_in_current_frame);
             cv::imshow("Detected Objects", input_frame.mat);
-
-            int key = cv::waitKey(1);
-            if (key == 'q' || key == 'Q' || key == 27) {
-                break;
-            }
         }
     } catch (const Status::FatalException& e) {
         reporter.report(e.error());
