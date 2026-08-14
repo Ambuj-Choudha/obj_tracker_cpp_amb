@@ -85,9 +85,14 @@ The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths
 
 ## TODOs
 
-- Add command line parser for changing runtime configs
-- Add Docker for reproducible environment
-- Wrap the detector into a ROS2 Node
+- Add a capture timestamp to `Data::Frame` (`steady_clock`)
+- Add performance diagnostics for profiling the pipeline (per-stage wall-clock,
+  printed on exit) and record the numbers
+- Add tests for isolated testing (`MockSource` exercising the EOF-vs-disconnect
+  split)
+- Wrap the detector into a ROS2 node
+- Implement multi-threading
+- Add a command line parser for changing runtime configs
 
 ## 3.0 References
 - [ByteTrack C++ Implementation](https://github.com/Vertical-Beach/ByteTrack-cpp/tree/main)

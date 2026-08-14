@@ -2,7 +2,7 @@
 #include<string>
 #include<unordered_map>
 #include<optional>
-// #include<format>
+#include<format>
 #include<fstream>
 #include <stdexcept>
 #include<random>
@@ -11,6 +11,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "detector.hpp"
+#include "common/status.hpp"
 #include "common/types.hpp"
 #include "visualization.hpp"
 
@@ -20,7 +21,12 @@ namespace {
     std::unordered_map<int, std::string> load_class_labels(const std::string& labels_file_path) {
         std::unordered_map<int, std::string> labels;
         std::ifstream in(labels_file_path);
-        if (!in) throw std::runtime_error("Failed to open labels file: " + labels_file_path);
+
+        if (!in) {
+            throw Status::FatalException(Status::Fatal{
+                Status::Stage::Visualization,
+                std::format("failed to open class labels file '{}'", labels_file_path)});
+        }
 
         std::string line;
         int idx = 0;
@@ -50,7 +56,17 @@ Visualizer::Visualizer(int border_thickness, std::optional<std::tuple<int, int, 
       text_colour_{text_colour.value_or(VisualizerDefaults::text_colour)},
       font_scale_{VisualizerDefaults::font_scale},
       class_labels_dict_{load_class_labels(VisualizerDefaults::class_labels_file_path)},
-      colour_map_{generate_colour_map(DetectorDefaults::num_classes)} {}
+      colour_map_{generate_colour_map(DetectorDefaults::num_classes)} {
+
+    if (static_cast<int>(class_labels_dict_.size()) != DetectorDefaults::num_classes) {
+        throw Status::FatalException(Status::Fatal{
+            Status::Stage::Visualization,
+            std::format("class labels file '{}' has {} entries but this build is configured for "
+                        "{} classes - the labels file does not match the model",
+                        VisualizerDefaults::class_labels_file_path,
+                        class_labels_dict_.size(), DetectorDefaults::num_classes)});
+    }
+}
 
 void Visualizer::draw_detections(Data::Frame& frame, const std::vector<Data::Detection>& detections) {
     for(const auto& detection : detections) {
@@ -69,10 +85,9 @@ void Visualizer::draw_bbox_w_labels_(cv::Mat& img, const Data::Detection& detect
     int x2 = detected_obj.bbox.x2;
     int y2 = detected_obj.bbox.y2;
     int class_id = detected_obj.class_id;
-
     // get the label for the object based on the class ID using the undodered_map 'class_labels_dict_'created earlier, also mention the confidence score. "<class_name> : <conf_score>"
-    auto box_colour = this->colour_map_.at(class_id);
-    auto class_name = this->class_labels_dict_.at(class_id);
+    const auto& box_colour = this->colour_map_.at(class_id);
+    const auto& class_name = this->class_labels_dict_.at(class_id);
 
     std::ostringstream oss;
     oss << class_name << " : " << detected_obj.confidence_score;
@@ -94,16 +109,16 @@ void Visualizer::draw_tracked_detections(Data::Frame& frame, const std::vector<D
 
 void Visualizer::draw_bbox_w_track_id_(cv::Mat& img, const Data::TrackedDetection& tracked_obj) {
     const auto& d = tracked_obj.detection;
-    // Colour by track_id so each tracked object keeps a stable colour across frames.
-    // If class_id was recovered, use the class colour; otherwise fall back to a
-    // colour derived from track_id modulo the palette.
-    cv::Scalar box_colour = (d.class_id >= 0 && colour_map_.count(d.class_id))
-        ? colour_map_.at(d.class_id)
-        : colour_map_.at(static_cast<int>(tracked_obj.track_id % colour_map_.size()));
+
+    const bool has_class = d.class_id >= 0;
+
+    const cv::Scalar box_colour =
+        has_class ? colour_map_.at(d.class_id)
+                  : colour_map_.at(static_cast<int>(tracked_obj.track_id % colour_map_.size()));
 
     std::ostringstream oss;
     oss << "ID " << tracked_obj.track_id;
-    if (d.class_id >= 0 && class_labels_dict_.count(d.class_id)) {
+    if (has_class) {
         oss << " " << class_labels_dict_.at(d.class_id);
     }
     std::string label = oss.str();

@@ -45,6 +45,7 @@ add_library(obj_tracker_lib STATIC
     src/camera.cpp
     src/detector.cpp
     src/engine.cpp
+    src/reporting.cpp
     src/transforms.cpp
     src/tracker.cpp
     src/visualization.cpp)
@@ -66,7 +67,17 @@ enable_clang_tidy_for(${PROJECT_NAME})
 # Tests
 option(BUILD_TESTS "Build test executables" ON)
 if(BUILD_TESTS)
-    add_executable(test_detector tests/test_detector.cpp)
-    target_link_libraries(test_detector PRIVATE obj_tracker_lib)
-    target_compile_definitions(test_detector PRIVATE PROJECT_ROOT="${CMAKE_SOURCE_DIR}")
+    # One entry per tests/test_<name>.cpp. Every test wires up identically
+    set(TEST_NAMES
+        camera
+        detector
+        reporting
+        retry_monitor
+        visualizer)
+
+    foreach(test_name IN LISTS TEST_NAMES)
+        add_executable(test_${test_name} tests/test_${test_name}.cpp)
+        target_link_libraries(test_${test_name} PRIVATE obj_tracker_lib)
+        target_compile_definitions(test_${test_name} PRIVATE PROJECT_ROOT="${CMAKE_SOURCE_DIR}")
+    endforeach()
 endif()

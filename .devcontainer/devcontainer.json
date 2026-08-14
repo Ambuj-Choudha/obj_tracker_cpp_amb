@@ -15,15 +15,15 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "ms-vscode.cpptools",
                 "ms-vscode.cmake-tools",
-                "llvm-vs-code-extensions.vscode-clangd",
-                "twxs.cmake"
+                "llvm-vs-code-extensions.vscode-clangd"
             ],
             "settings": {
                 "cmake.useCMakePresets": "always",
                 "cmake.configureOnOpen": false,
-                "C_Cpp.default.compileCommands": "${workspaceFolder}/build-ninja/compile_commands.json"
+                "clangd.arguments": [
+                    "--compile-commands-dir=${workspaceFolder}/build-ninja"
+                ]
             }
         }
     }

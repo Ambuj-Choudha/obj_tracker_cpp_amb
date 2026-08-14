@@ -2,10 +2,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include <onnxruntime_cxx_api.h>
+
+#include "common/status.hpp"
 
 // Thin wrapper around an ONNX Runtime session for a single-input,
 // single-output model. Detector talks to the model through this.
@@ -30,7 +33,7 @@ public:
     InferenceEngine(InferenceEngine&&) = delete;
     ~InferenceEngine() = default;
 
-    Output infer(const float* input, size_t input_len);
+    std::optional<Output> infer(const float* input, size_t input_len);
 
     // Shape the model declares at its single input tensor, e.g. {1, 3, 640, 640}.
     // Read from the ONNX at load time — no hardcoded values in this class.
