@@ -70,7 +70,7 @@ std::optional<InferenceEngine::Output> InferenceEngine::infer(const float* input
             actual += (i ? "," : "") + std::to_string(shape[i]);
         }
         throw Status::FatalException(Status::Fatal{
-            Status::Stage::Postprocess,
+            Status::Stage::Inference,
             std::format("unexpected model output shape [{}]: expected [1,N,K]", actual)});
     }
     return Output{last_output_.GetTensorData<float>(), shape[1], shape[2]};
