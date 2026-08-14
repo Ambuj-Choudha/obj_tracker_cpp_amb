@@ -58,13 +58,13 @@ Visualizer::Visualizer(int border_thickness, std::optional<std::tuple<int, int, 
       class_labels_dict_{load_class_labels(VisualizerDefaults::class_labels_file_path)},
       colour_map_{generate_colour_map(DetectorDefaults::num_classes)} {
 
-    if (class_labels_dict_.size() != colour_map_.size()) {
+    if (static_cast<int>(class_labels_dict_.size()) != DetectorDefaults::num_classes) {
         throw Status::FatalException(Status::Fatal{
             Status::Stage::Visualization,
-            std::format("class label/colour map mismatch: '{}' has {} labels but the model "
-                        "declares {} classes - the labels file does not match the model",
+            std::format("class labels file '{}' has {} entries but this build is configured for "
+                        "{} classes - the labels file does not match the model",
                         VisualizerDefaults::class_labels_file_path,
-                        class_labels_dict_.size(), colour_map_.size())});
+                        class_labels_dict_.size(), DetectorDefaults::num_classes)});
     }
 }
 
