@@ -12,6 +12,13 @@ std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(cons
     int target_size_height = target_size;
     auto pad_colour = PreprocessorConfig::LetterboxPaddingColour;
 
+    // EOF gives out a default-constructed Frame, so check the state before proceeding
+    if (src.mat.empty()) {
+        throw Status::FatalException(Status::Fatal{
+            Status::Stage::Preprocess,
+            "empty frame reached preprocessing: the source reported success without decoding one"});
+    }
+
     cv::Mat img;
     switch (src.mat.channels()) {
         case 3: img = src.mat;                                     break;
