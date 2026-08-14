@@ -11,6 +11,7 @@
 
 #include "common/types.hpp"
 #include "detector.hpp"
+#include "test_harness.hpp"
 
 #ifndef PROJECT_ROOT
 #define PROJECT_ROOT "."
@@ -38,7 +39,11 @@ int main() {
     YOLOv10DetectorONNX detector{model_path};
 
     Data::Frame frame{img};
-    auto detections = detector.detect(frame);
+    auto result = detector.detect(frame);
+
+    if (!result) return fail("detect() failed - " + test::describe(result.error()));
+
+    const auto& detections = *result;
 
     std::cout << "detections=" << detections.size() << "\n";
     if (detections.empty()) return fail("expected at least one detection, got 0");
