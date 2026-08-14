@@ -76,6 +76,13 @@ VideoFile::VideoFile(const std::string& source_file, int apiID, int retry_budget
 
     expected_frame_count_ = static_cast<long long>(cap.get(cv::CAP_PROP_FRAME_COUNT));
 
+    // Unseekable streams and index-less containers report 0 or negative
+    if (expected_frame_count_ <= 0) {
+        std::cout << "Warning: '" << source_file
+                  << "' reports no frame count; a mid-file decode failure will be "
+                     "reported as a normal end of stream.\n";
+    }
+
     std::cout << "Frame Width: " << cap.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
     std::cout << "Frame Height: " << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
