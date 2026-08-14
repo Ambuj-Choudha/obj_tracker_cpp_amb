@@ -106,4 +106,10 @@ class VideoFile : public VideoCaptureBase {
     private:
         std::string source_file;
         int apiID;
+
+        // cv::VideoCapture::read() returns false for a clean end of stream and
+        // for a decode that died mid-file, with nothing to tell them apart, 
+        // so count how many frames were read against the expected number of frames
+        long long expected_frame_count_{0};
+        long long frames_read_{0};
 };

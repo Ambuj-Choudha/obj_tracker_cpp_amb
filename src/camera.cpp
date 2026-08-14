@@ -13,6 +13,7 @@
 namespace {
     constexpr const char* kEmptyFrameCause = "capture returned an empty frame; device may be disconnected";
     constexpr const char* kDecodeFailedCause = "frame decode failed mid-stream";
+    constexpr const char* kEmptyDecodeCause = "decoder reported success but produced no frame";
     constexpr const char* kOutOfMemoryCause = "out of memory allocating frame buffer";
 
     // allocation failure surfaces as cv::Exception with code StsNoMem, not std::bad_alloc
@@ -73,6 +74,8 @@ VideoFile::VideoFile(const std::string& source_file, int apiID, int retry_budget
     cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, CameraDefaults::FrameDefaultHeight);
 
+    expected_frame_count_ = static_cast<long long>(cap.get(cv::CAP_PROP_FRAME_COUNT));
+
     std::cout << "Frame Width: " << cap.get(cv::CAP_PROP_FRAME_WIDTH) << '\n';
     std::cout << "Frame Height: " << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << '\n';
 }
@@ -91,15 +94,18 @@ auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
     }
 
     if (!read_file_ok) {
-        // Stream ended as intended: not a failure, caller learns this from getSourceState()
+        if (expected_frame_count_ > 0 && frames_read_ < expected_frame_count_) {
+            return std::unexpected(record_failure(kDecodeFailedCause, "video decode"));
+        }
         source_state_ = Status::SourceState::EndOfStream;
         return Data::Frame{};
     }
 
     if (frame.empty()) {
-        return std::unexpected(record_failure(kDecodeFailedCause, "video decode"));
+        return std::unexpected(record_failure(kEmptyDecodeCause, "video decode"));
     }
 
+    ++frames_read_;
     record_success();
     updateFps();
 
