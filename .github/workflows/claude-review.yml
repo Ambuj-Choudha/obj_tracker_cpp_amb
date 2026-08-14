@@ -45,5 +45,5 @@ jobs:
             Do not comment on formatting, and do not restate what the diff does.
             If nothing meets the bar above, say so instead of padding the review.
           claude_args: |
-            --max-turns 30
+            --max-turns 60
             --allowedTools "Bash(git diff:*)" "Bash(git log:*)" "Bash(git merge-base:*)"
