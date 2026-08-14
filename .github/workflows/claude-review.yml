@@ -20,8 +20,11 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ github.token }}
           track_progress: true
+          # Non-user actors are rejected by default, and Copilot pushing to a PR
+          # counts as one. Named rather than '*': everything on this list can
+          # spend subscription tokens on a review run.
+          allowed_bots: "Copilot"
           prompt: |
             Review this pull request.
 
@@ -43,6 +46,4 @@ jobs:
             If nothing meets the bar above, say so instead of padding the review.
           claude_args: |
             --max-turns 10
-            --allowedTools "Bash(git diff:*)"
-            --allowedTools "Bash(git log:*)"
-            --allowedTools "Bash(git merge-base:*)"
+            --allowedTools "Bash(git diff:*)" "Bash(git log:*)" "Bash(git merge-base:*)"
