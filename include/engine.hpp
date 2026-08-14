@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -32,7 +33,7 @@ public:
     InferenceEngine(InferenceEngine&&) = delete;
     ~InferenceEngine() = default;
 
-    Status::Result<Output> infer(const float* input, size_t input_len);
+    std::optional<Output> infer(const float* input, size_t input_len);
 
     // Shape the model declares at its single input tensor, e.g. {1, 3, 640, 640}.
     // Read from the ONNX at load time — no hardcoded values in this class.

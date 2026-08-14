@@ -5,10 +5,6 @@
 
 #include "common/status.hpp"
 
-namespace {
-    constexpr const char* kInferenceFailedCause = "inference run failed for this frame";
-}
-
 InferenceEngine::InferenceEngine(const std::string& model_path)
     : env_{ORT_LOGGING_LEVEL_WARNING, "InferenceEngine"},
       session_options_{} {
@@ -43,7 +39,7 @@ InferenceEngine::InferenceEngine(const std::string& model_path)
     }
 }
 
-Status::Result<InferenceEngine::Output> InferenceEngine::infer(const float* input, size_t input_len) {
+std::optional<InferenceEngine::Output> InferenceEngine::infer(const float* input, size_t input_len) {
     try {
         Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 
@@ -63,8 +59,8 @@ Status::Result<InferenceEngine::Output> InferenceEngine::infer(const float* inpu
                                            output_names, 1);
         last_output_ = std::move(output_tensors[0]);
     } catch (const Ort::Exception&) {
-        return std::unexpected(Status::Recoverable{Status::Stage::Inference, kInferenceFailedCause, 1});
-        }
+        return std::nullopt;
+    }
 
     auto shape = last_output_.GetTensorTypeAndShapeInfo().GetShape();
     // Expected: [1, N, K] — squeeze the leading batch dim.
