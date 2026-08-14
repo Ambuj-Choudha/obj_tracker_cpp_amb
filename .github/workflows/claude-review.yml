@@ -46,4 +46,4 @@ jobs:
             If nothing meets the bar above, say so instead of padding the review.
           claude_args: |
             --max-turns 10
-            --allowedTools "Bash(git diff:*) Bash(git log:*) Bash(git merge-base:*)"
+            --allowedTools "Bash(git diff:*)" "Bash(git log:*)" "Bash(git merge-base:*)"
