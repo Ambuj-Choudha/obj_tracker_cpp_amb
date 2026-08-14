@@ -22,16 +22,15 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
           prompt: |
-            Review this pull request in full.
+            Review this pull request.
 
-            Scope: the complete diff of the PR branch against its base, which is
-            `git diff ${{ github.event.pull_request.base.sha }}...HEAD`. Run that
-            command and review everything it returns — not just the most recent
-            commit. On a re-run triggered by a new push, earlier commits in the PR
-            are still in scope.
+            Scope is the whole PR, every time — run
+            `git diff ${{ github.event.pull_request.base.sha }}...HEAD` and review
+            what it returns. When a new push re-triggers this, the earlier commits
+            are still in scope; do not narrow to the latest commit.
 
-            It is a C++23 object-detection and tracking pipeline built on OpenCV,
-            onnxruntime and Eigen, with ByteTrack vendored under src/ByteTrack.
+            The project is a C++23 object-detection and tracking pipeline built on
+            OpenCV, onnxruntime and Eigen, with ByteTrack vendored under src/ByteTrack.
 
             Report only:
               - correctness bugs, with a concrete failing input or state
