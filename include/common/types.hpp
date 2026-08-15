@@ -1,10 +1,12 @@
 #pragma once
+#include <chrono>
 #include <cstddef>
 #include <opencv2/core.hpp>
 
 namespace Data{
     struct Frame {
         cv::Mat mat;
+        std::chrono::steady_clock::time_point timestamp;
     };
 
     struct BBox{
