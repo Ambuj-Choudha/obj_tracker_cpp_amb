@@ -3,18 +3,6 @@
 #include <iostream>
 #include <variant>
 
-constexpr std::string_view stage_name(Status::Stage stage) {
-    switch (stage) {
-        case Status::Stage::Source:        return "Source";
-        case Status::Stage::Preprocess:    return "Preprocess";
-        case Status::Stage::Inference:     return "Inference";
-        case Status::Stage::Postprocess:   return "Postprocess";
-        case Status::Stage::Tracking:      return "Tracking";
-        case Status::Stage::Visualization: return "Visualization";
-    }
-    return "Unknown";
-}
-
 bool ConsoleReporter::start_new_warning_interval_(Status::Stage origin) {
     const auto now = Clock::now();
     auto& last_warned = last_recoverable_.at(static_cast<std::size_t>(origin));
@@ -32,7 +20,7 @@ bool ConsoleReporter::start_new_warning_interval_(Status::Stage origin) {
 
 void ConsoleReporter::report(const Status::Error& error) {
     if (const auto* fatal = std::get_if<Status::Fatal>(&error)) {  // get_if() returns a nullptr if the error is not Fatal
-        std::cerr << "[FATAL] [" << stage_name(fatal->origin) << "] " << fatal->cause << '\n';
+        std::cerr << "[FATAL] [" << Status::stage_name(fatal->origin) << "] " << fatal->cause << '\n';
         return;
     }
 
@@ -41,6 +29,6 @@ void ConsoleReporter::report(const Status::Error& error) {
     if (!start_new_warning_interval_(recoverable.origin)) {
         return;
     }
-    std::cerr << "[WARN] [" << stage_name(recoverable.origin) << "] " << recoverable.cause
+    std::cerr << "[WARN] [" << Status::stage_name(recoverable.origin) << "] " << recoverable.cause
               << " (attempt " << recoverable.attempt_count << ")\n";
 }
