@@ -15,8 +15,6 @@
 #include "common/types.hpp"
 #include "visualization.hpp"
 
-// TODO: Both the helper function should only be called once only for the very first time the model is run, after that use the cached file
-
 namespace {
     std::unordered_map<int, std::string> load_class_labels(const std::string& labels_file_path) {
         std::unordered_map<int, std::string> labels;
