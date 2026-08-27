@@ -11,7 +11,8 @@
 // ByteTrack's Eigen-heavy headers.
 namespace byte_track { class BYTETracker; }
 
-struct TrackerDefaults {
+// Mirrors byte_track::BYTETracker's own constructor defaults
+struct TrackerConfig {
     static constexpr int frame_rate    = 30;
     static constexpr int track_buffer  = 30;
     static constexpr float track_thresh = 0.5f;
@@ -19,20 +20,21 @@ struct TrackerDefaults {
     static constexpr float match_thresh = 0.8f;
 };
 
-struct ByteTrackerAdapterConfig {
-    // Min IoU before a track's class_id is recovered from a detection
-    static constexpr float class_recovery_min_iou = 0.5f;
+namespace TrackerFixedParams {
+    // IoU tuning threshold before a track's class_id is recovered from a detection
+    constexpr float class_recovery_min_iou = 0.5f;
 
-    static constexpr int RetryBudget = 5;
-};
+    // Fault-tolerance policy
+    constexpr int RetryBudget = 5;
+}
 
 class ByteTrackerAdapter {
     public:
-        ByteTrackerAdapter(int frame_rate    = TrackerDefaults::frame_rate,
-                           int track_buffer  = TrackerDefaults::track_buffer,
-                           float track_thresh = TrackerDefaults::track_thresh,
-                           float high_thresh  = TrackerDefaults::high_thresh,
-                           float match_thresh = TrackerDefaults::match_thresh);
+        ByteTrackerAdapter(int frame_rate    = TrackerConfig::frame_rate,
+                           int track_buffer  = TrackerConfig::track_buffer,
+                           float track_thresh = TrackerConfig::track_thresh,
+                           float high_thresh  = TrackerConfig::high_thresh,
+                           float match_thresh = TrackerConfig::match_thresh);
         ByteTrackerAdapter(const ByteTrackerAdapter&) = delete;
         ByteTrackerAdapter& operator=(const ByteTrackerAdapter&) = delete;
         ByteTrackerAdapter(ByteTrackerAdapter&&) = delete;

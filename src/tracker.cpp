@@ -47,7 +47,7 @@ ByteTrackerAdapter::ByteTrackerAdapter(int frame_rate,
                                                      track_thresh,
                                                      high_thresh,
                                                      match_thresh)},
-      retry_monitor_{Status::Stage::Tracking, ByteTrackerAdapterConfig::RetryBudget} {}
+      retry_monitor_{Status::Stage::Tracking, TrackerFixedParams::RetryBudget} {}
 
 ByteTrackerAdapter::~ByteTrackerAdapter() = default;
 
@@ -89,7 +89,7 @@ ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
         };
 
         int recovered_class = -1;
-        float best_iou = ByteTrackerAdapterConfig::class_recovery_min_iou;  // require reasonable overlap to trust the recovery
+        float best_iou = TrackerFixedParams::class_recovery_min_iou;  // require reasonable overlap to trust the recovery
         for (const auto& d : detections) {
             const float iou = iou_bbox_rect(d.bbox, r);
             if (iou > best_iou) {
