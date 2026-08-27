@@ -54,15 +54,15 @@ Visualizer::Visualizer(int border_thickness, std::optional<std::tuple<int, int, 
       text_colour_{text_colour.value_or(VisualizerDefaults::text_colour)},
       font_scale_{VisualizerDefaults::font_scale},
       class_labels_dict_{load_class_labels(VisualizerDefaults::class_labels_file_path)},
-      colour_map_{generate_colour_map(DetectorDefaults::num_classes)} {
+      colour_map_{generate_colour_map(YOLOv10ModelFormat::num_classes)} {
 
-    if (static_cast<int>(class_labels_dict_.size()) != DetectorDefaults::num_classes) {
+    if (static_cast<int>(class_labels_dict_.size()) != YOLOv10ModelFormat::num_classes) {
         throw Status::FatalException(Status::Fatal{
             Status::Stage::Visualization,
             std::format("class labels file '{}' has {} entries but this build is configured for "
                         "{} classes - the labels file does not match the model",
                         VisualizerDefaults::class_labels_file_path,
-                        class_labels_dict_.size(), DetectorDefaults::num_classes)});
+                        class_labels_dict_.size(), YOLOv10ModelFormat::num_classes)});
     }
 }
 

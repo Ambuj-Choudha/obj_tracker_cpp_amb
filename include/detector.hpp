@@ -11,22 +11,23 @@
 #include "engine.hpp"
 #include "transforms.hpp"
 
-// TODO: Seperate out the runtime constants from the fixed params
-// clear distinction in what can be changed and what cannot
-
+// Caller-configurable defaults only; each has a matching constructor parameter below.
 struct DetectorDefaults{
     static constexpr double ConfThreshold = 0.5;
-    static constexpr int num_classes = 80;
     static constexpr int PreprocessRetryBudget = 10;
     static constexpr int InferenceRetryBudget  = 10;
     static constexpr int PostprocessRetryBudget = 10;
+};
+
+// Fixed facts about the YOLOv10/COCO model this detector targets; not caller-configurable.
+struct YOLOv10ModelFormat {
+    static constexpr int num_classes = 80;
 
     // YOLOv10 emits one row per detection as [x1, y1, x2, y2, score, class_id].
     // postprocess_frames_ indexes row[0]..row[5], declare default for verifying o/p shape
     static constexpr int64_t OutputFieldsPerRow = 6;
 };
 
-// TODO: understand when to use inline const and when constexpr
 namespace PreprocessorConfig {
     constexpr double rescale_factor = 1.0/255.0;
     inline const cv::Scalar mean{0, 0, 0};

@@ -28,8 +28,8 @@ int main() {
     // 1. The shipped assets agree with the compiled-in class count.
     try {
         Visualizer visualizer{2};
-        std::cout << "labels file matches DetectorDefaults::num_classes ("
-                  << DetectorDefaults::num_classes << ")\n";
+        std::cout << "labels file matches YOLOv10ModelFormat::num_classes ("
+                  << YOLOv10ModelFormat::num_classes << ")\n";
     } catch (const Status::FatalException& e) {
         return fail(std::string{"shipped assets are inconsistent: "} + e.what());
     }

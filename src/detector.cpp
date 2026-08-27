@@ -72,11 +72,11 @@ Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::prepro
 
 Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::postprocess_frames_(
     InferenceEngine::Output raw_outputs, double scale, int dw, int dh, int img_w, int img_h) {
-    if (raw_outputs.cols != DetectorDefaults::OutputFieldsPerRow) {
+    if (raw_outputs.cols != YOLOv10ModelFormat::OutputFieldsPerRow) {
         throw Status::FatalException(Status::Fatal{
             Status::Stage::Postprocess,
             std::format("model output has {} fields per row, expected {}",
-                        raw_outputs.cols, DetectorDefaults::OutputFieldsPerRow)});
+                        raw_outputs.cols, YOLOv10ModelFormat::OutputFieldsPerRow)});
     }
 
     std::vector<Data::Detection> detections;
