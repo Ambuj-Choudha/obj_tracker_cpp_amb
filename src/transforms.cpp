@@ -61,7 +61,7 @@ std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(cons
 }
 
 Data::BBox postprocess::undo_letter_box_transform(float x1, float y1, float x2, float y2,
-                                                  double scale, int dw, int dh) {
+                                                  double scale, int dw, int dh, int img_w, int img_h) {
     // Inverse of apply_letterbox: strip the pad, then undo the uniform scale.
     Data::BBox bbox;
     bbox.x1 = static_cast<int>(std::round((x1 - dw) / scale));
@@ -69,6 +69,11 @@ Data::BBox postprocess::undo_letter_box_transform(float x1, float y1, float x2, 
     bbox.x2 = static_cast<int>(std::round((x2 - dw) / scale));
     bbox.y2 = static_cast<int>(std::round((y2 - dh) / scale));
 
-    // TODO: maybe add logic that clips these coordinates to valid image dimensions
+    // clip the coordinates to valid image dim
+    bbox.x1 = std::clamp(bbox.x1, 0, img_w - 1);
+    bbox.y1 = std::clamp(bbox.y1, 0, img_h - 1);
+    bbox.x2 = std::clamp(bbox.x2, 0, img_w - 1);
+    bbox.y2 = std::clamp(bbox.y2, 0, img_h - 1);
+
     return bbox;
 }

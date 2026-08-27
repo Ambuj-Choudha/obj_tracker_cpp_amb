@@ -39,7 +39,8 @@ YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
     }
     inference_monitor_.record_success();
 
-    return this->postprocess_frames_(*raw_outputs, preprocessed_frame->scale, preprocessed_frame->dw, preprocessed_frame->dh);
+    return this->postprocess_frames_(*raw_outputs, preprocessed_frame->scale, preprocessed_frame->dw, preprocessed_frame->dh,
+                                     frame.mat.cols, frame.mat.rows);
 }
 
 Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
@@ -70,7 +71,7 @@ Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::prepro
 }
 
 Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::postprocess_frames_(
-    InferenceEngine::Output raw_outputs, double scale, int dw, int dh) {
+    InferenceEngine::Output raw_outputs, double scale, int dw, int dh, int img_w, int img_h) {
     if (raw_outputs.cols != DetectorDefaults::OutputFieldsPerRow) {
         throw Status::FatalException(Status::Fatal{
             Status::Stage::Postprocess,
@@ -92,7 +93,7 @@ Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::postprocess_fr
             if (conf < this->confidence_threshold_) break;
 
             Data::BBox bbox_orig = postprocess::undo_letter_box_transform(row[0], row[1], row[2], row[3],
-                                                                        scale, dw, dh);
+                                                                        scale, dw, dh, img_w, img_h);
             const int class_id = static_cast<int>(row[5]);
 
             detections.push_back(Data::Detection{bbox_orig, class_id, conf});

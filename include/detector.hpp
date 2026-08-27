@@ -73,6 +73,6 @@ class YOLOv10DetectorONNX : public DetectorBase{
         };
 
         Status::Result<LetterboxedBlob> preprocess_frames_(const Data::Frame& frame);
-        Status::Result<std::vector<Data::Detection>> postprocess_frames_(InferenceEngine::Output raw_outputs, double scale, int dw, int dh);
+        Status::Result<std::vector<Data::Detection>> postprocess_frames_(InferenceEngine::Output raw_outputs, double scale, int dw, int dh, int img_w, int img_h);
 };
 
