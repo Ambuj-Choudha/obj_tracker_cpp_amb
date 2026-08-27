@@ -36,7 +36,7 @@ namespace {
     }
 
     std::unordered_map<int, cv::Scalar> generate_colour_map(int num_classes) {
-        std::mt19937 rng(VisualizerConfig::colour_seed);
+        std::mt19937 rng(VisualizerFixedParams::colour_seed);
         std::uniform_int_distribution<int> dist(0, 255);
         std::unordered_map<int, cv::Scalar> colours;
         for (int i = 0; i < num_classes; ++i) {
@@ -51,18 +51,18 @@ namespace {
 
 Visualizer::Visualizer(int border_thickness, std::optional<std::tuple<int, int, int>> text_colour)
     : border_thickness_{border_thickness},
-      text_colour_{text_colour.value_or(VisualizerDefaults::text_colour)},
-      font_scale_{VisualizerDefaults::font_scale},
-      class_labels_dict_{load_class_labels(VisualizerDefaults::class_labels_file_path)},
-      colour_map_{generate_colour_map(YOLOv10ModelFormat::num_classes)} {
+      text_colour_{text_colour.value_or(VisualizerConfig::text_colour)},
+      font_scale_{VisualizerConfig::font_scale},
+      class_labels_dict_{load_class_labels(VisualizerConfig::class_labels_file_path)},
+      colour_map_{generate_colour_map(DetectorFixedParams::num_classes)} {
 
-    if (static_cast<int>(class_labels_dict_.size()) != YOLOv10ModelFormat::num_classes) {
+    if (static_cast<int>(class_labels_dict_.size()) != DetectorFixedParams::num_classes) {
         throw Status::FatalException(Status::Fatal{
             Status::Stage::Visualization,
             std::format("class labels file '{}' has {} entries but this build is configured for "
                         "{} classes - the labels file does not match the model",
-                        VisualizerDefaults::class_labels_file_path,
-                        class_labels_dict_.size(), YOLOv10ModelFormat::num_classes)});
+                        VisualizerConfig::class_labels_file_path,
+                        class_labels_dict_.size(), DetectorFixedParams::num_classes)});
     }
 }
 
@@ -96,7 +96,7 @@ void Visualizer::draw_bbox_w_labels_(cv::Mat& img, const Data::Detection& detect
 
     // Write the text
     const auto& [tr, tg, tb] = text_colour_;
-    cv::putText(img, label, cv::Point(x1, y1 - 5), VisualizerConfig::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
+    cv::putText(img, label, cv::Point(x1, y1 - 5), VisualizerFixedParams::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
 }
 
 void Visualizer::draw_tracked_detections(Data::Frame& frame, const std::vector<Data::TrackedDetection>& tracked) {
@@ -125,5 +125,5 @@ void Visualizer::draw_bbox_w_track_id_(cv::Mat& img, const Data::TrackedDetectio
                   box_colour, border_thickness_);
     const auto& [tr, tg, tb] = text_colour_;
     cv::putText(img, label, cv::Point(d.bbox.x1, d.bbox.y1 - 5),
-                VisualizerConfig::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
+                VisualizerFixedParams::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
 }

@@ -10,7 +10,7 @@ std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(cons
 
     int target_size_width = target_size;
     int target_size_height = target_size;
-    auto pad_colour = PreprocessorConfig::LetterboxPaddingColour;
+    auto pad_colour = PreprocessorFixedParams::LetterboxPaddingColour;
 
     // EOF gives out a default-constructed Frame, so check the state before proceeding
     if (src.mat.empty()) {

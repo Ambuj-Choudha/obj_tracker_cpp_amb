@@ -10,17 +10,17 @@
 
 #include "common/types.hpp"
 
-struct VisualizerDefaults {
+struct VisualizerConfig {
     static inline std::tuple<int,int,int> text_colour{0, 0, 0};
     static inline double font_scale = 0.5;
     static inline std::string class_labels_file_path = "assets/labels/coco.names";
 };
 
-// Fixed internal constants for Visualizer
-struct VisualizerConfig {
-    static constexpr int font = cv::FONT_HERSHEY_SIMPLEX;
-    static constexpr int colour_seed = 42;
-};
+// Fixed internal constants for Visualizer; not caller-configurable.
+namespace VisualizerFixedParams {
+    constexpr int font = cv::FONT_HERSHEY_SIMPLEX;
+    constexpr int colour_seed = 42;
+}
 
 
 class Visualizer{
