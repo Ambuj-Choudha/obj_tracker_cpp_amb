@@ -15,15 +15,13 @@ namespace {
     }
 }
 
-YOLOv10DetectorONNX::YOLOv10DetectorONNX(
-    const std::string& model_path, double confidence_threshold,
-    int preprocess_retry_budget, int inference_retry_budget, int postprocess_retry_budget)
+YOLOv10DetectorONNX::YOLOv10DetectorONNX(const std::string& model_path, double confidence_threshold)
     : confidence_threshold_{confidence_threshold},
       engine_{model_path},
       target_size_{static_cast<int>(engine_.input_shape()[2])},
-      preprocess_monitor_{Status::Stage::Preprocess, preprocess_retry_budget},
-      inference_monitor_{Status::Stage::Inference, inference_retry_budget},
-      postprocess_monitor_{Status::Stage::Postprocess, postprocess_retry_budget} {}
+      preprocess_monitor_{Status::Stage::Preprocess, DetectorFixedParams::PreprocessRetryBudget},
+      inference_monitor_{Status::Stage::Inference, DetectorFixedParams::InferenceRetryBudget},
+      postprocess_monitor_{Status::Stage::Postprocess, DetectorFixedParams::PostprocessRetryBudget} {}
 
 Status::Result<std::vector<Data::Detection>>
 YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
@@ -44,7 +42,7 @@ YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
 }
 
 Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
-    namespace preConfig = PreprocessorConfig;
+    namespace preConfig = PreprocessorFixedParams;
 
     try {
     auto [letterboxed_frame, scale, dw, dh] = preprocess::apply_letterbox_transform(frame, target_size_);
@@ -72,11 +70,11 @@ Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::prepro
 
 Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::postprocess_frames_(
     InferenceEngine::Output raw_outputs, double scale, int dw, int dh, int img_w, int img_h) {
-    if (raw_outputs.cols != YOLOv10ModelFormat::OutputFieldsPerRow) {
+    if (raw_outputs.cols != DetectorFixedParams::OutputFieldsPerRow) {
         throw Status::FatalException(Status::Fatal{
             Status::Stage::Postprocess,
             std::format("model output has {} fields per row, expected {}",
-                        raw_outputs.cols, YOLOv10ModelFormat::OutputFieldsPerRow)});
+                        raw_outputs.cols, DetectorFixedParams::OutputFieldsPerRow)});
     }
 
     std::vector<Data::Detection> detections;
