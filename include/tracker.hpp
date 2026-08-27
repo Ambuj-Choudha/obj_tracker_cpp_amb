@@ -12,14 +12,14 @@
 namespace byte_track { class BYTETracker; }
 
 struct TrackerDefaults {
-    // Mirrors byte_track::BYTETracker defaults; kept here so tuning happens
-    // in one place next to the rest of the project's runtime config.
     static constexpr int frame_rate    = 30;
     static constexpr int track_buffer  = 30;
     static constexpr float track_thresh = 0.5f;
     static constexpr float high_thresh  = 0.6f;
     static constexpr float match_thresh = 0.8f;
+};
 
+struct ByteTrackerAdapterConfig {
     // Min IoU before a track's class_id is recovered from a detection
     static constexpr float class_recovery_min_iou = 0.5f;
 
