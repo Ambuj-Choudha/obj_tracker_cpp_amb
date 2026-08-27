@@ -36,7 +36,7 @@ namespace {
     }
 
     std::unordered_map<int, cv::Scalar> generate_colour_map(int num_classes) {
-        std::mt19937 rng(VisualizerDefaults::colour_seed);
+        std::mt19937 rng(VisualizerConfig::colour_seed);
         std::uniform_int_distribution<int> dist(0, 255);
         std::unordered_map<int, cv::Scalar> colours;
         for (int i = 0; i < num_classes; ++i) {
@@ -96,7 +96,7 @@ void Visualizer::draw_bbox_w_labels_(cv::Mat& img, const Data::Detection& detect
 
     // Write the text
     const auto& [tr, tg, tb] = text_colour_;
-    cv::putText(img, label, cv::Point(x1, y1 - 5), VisualizerDefaults::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
+    cv::putText(img, label, cv::Point(x1, y1 - 5), VisualizerConfig::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
 }
 
 void Visualizer::draw_tracked_detections(Data::Frame& frame, const std::vector<Data::TrackedDetection>& tracked) {
@@ -125,5 +125,5 @@ void Visualizer::draw_bbox_w_track_id_(cv::Mat& img, const Data::TrackedDetectio
                   box_colour, border_thickness_);
     const auto& [tr, tg, tb] = text_colour_;
     cv::putText(img, label, cv::Point(d.bbox.x1, d.bbox.y1 - 5),
-                VisualizerDefaults::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
+                VisualizerConfig::font, this->font_scale_, cv::Scalar(tb, tg, tr), 1);
 }

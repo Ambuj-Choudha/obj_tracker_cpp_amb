@@ -10,13 +10,16 @@
 
 #include "common/types.hpp"
 
-// Almost all of the params can be modified during runtime that is why defined in the struct
 struct VisualizerDefaults {
     static inline std::tuple<int,int,int> text_colour{0, 0, 0};
-    static inline int font = cv::FONT_HERSHEY_SIMPLEX;
     static inline double font_scale = 0.5;
-    static constexpr int colour_seed = 42;
     static inline std::string class_labels_file_path = "assets/labels/coco.names";
+};
+
+// Fixed internal constants for Visualizer
+struct VisualizerConfig {
+    static constexpr int font = cv::FONT_HERSHEY_SIMPLEX;
+    static constexpr int colour_seed = 42;
 };
 
 
