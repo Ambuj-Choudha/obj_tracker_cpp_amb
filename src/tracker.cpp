@@ -13,27 +13,29 @@ namespace {
 
     // IoU between a Data::BBox (tlbr int) and a byte_track::Rect<float> (tlwh).
     float iou_bbox_rect(const Data::BBox& b, const byte_track::Rect<float>& r) {
-        const float ax1 = static_cast<float>(b.x1);
-        const float ay1 = static_cast<float>(b.y1);
-        const float ax2 = static_cast<float>(b.x2);
-        const float ay2 = static_cast<float>(b.y2);
-        const float bx1 = r.x();
-        const float by1 = r.y();
-        const float bx2 = r.x() + r.width();
-        const float by2 = r.y() + r.height();
+      const auto ax1 = static_cast<float>(b.x1);
+      const auto ay1 = static_cast<float>(b.y1);
+      const auto ax2 = static_cast<float>(b.x2);
+      const auto ay2 = static_cast<float>(b.y2);
+      const float bx1 = r.x();
+      const float by1 = r.y();
+      const float bx2 = r.x() + r.width();
+      const float by2 = r.y() + r.height();
 
-        const float ix1 = std::max(ax1, bx1);
-        const float iy1 = std::max(ay1, by1);
-        const float ix2 = std::min(ax2, bx2);
-        const float iy2 = std::min(ay2, by2);
-        const float iw = std::max(0.0f, ix2 - ix1);
-        const float ih = std::max(0.0f, iy2 - iy1);
-        const float inter = iw * ih;
+      const float ix1 = std::max(ax1, bx1);
+      const float iy1 = std::max(ay1, by1);
+      const float ix2 = std::min(ax2, bx2);
+      const float iy2 = std::min(ay2, by2);
+      const float iw = std::max(0.0F, ix2 - ix1);
+      const float ih = std::max(0.0F, iy2 - iy1);
+      const float inter = iw * ih;
 
-        const float area_a = std::max(0.0f, ax2 - ax1) * std::max(0.0f, ay2 - ay1);
-        const float area_b = std::max(0.0f, r.width()) * std::max(0.0f, r.height());
-        const float uni = area_a + area_b - inter;
-        return uni > 0.0f ? inter / uni : 0.0f;
+      const float area_a =
+          std::max(0.0F, ax2 - ax1) * std::max(0.0F, ay2 - ay1);
+      const float area_b =
+          std::max(0.0F, r.width()) * std::max(0.0F, r.height());
+      const float uni = area_a + area_b - inter;
+      return uni > 0.0F ? inter / uni : 0.0F;
     }
 }
 
@@ -57,12 +59,12 @@ ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
     std::vector<byte_track::Object> objects;
     objects.reserve(detections.size());
     for (const auto& d : detections) {
-        const float w = static_cast<float>(d.bbox.x2 - d.bbox.x1);
-        const float h = static_cast<float>(d.bbox.y2 - d.bbox.y1);
-        byte_track::Rect<float> rect{static_cast<float>(d.bbox.x1),
-                                     static_cast<float>(d.bbox.y1),
-                                     w, h};
-        objects.emplace_back(rect, d.class_id, static_cast<float>(d.confidence_score));
+      const auto w = static_cast<float>(d.bbox.x2 - d.bbox.x1);
+      const auto h = static_cast<float>(d.bbox.y2 - d.bbox.y1);
+      byte_track::Rect<float> rect{static_cast<float>(d.bbox.x1),
+                                   static_cast<float>(d.bbox.y1), w, h};
+      objects.emplace_back(rect, d.class_id,
+                           static_cast<float>(d.confidence_score));
     }
 
     // 2) Run tracker
@@ -81,12 +83,10 @@ ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
     for (const auto& t : tracks) {
         const auto& r = t->getRect();
 
-        Data::BBox bbox{
-            static_cast<int>(std::round(r.x())),
-            static_cast<int>(std::round(r.y())),
-            static_cast<int>(std::round(r.x() + r.width())),
-            static_cast<int>(std::round(r.y() + r.height()))
-        };
+        Data::BBox bbox{.x1 = static_cast<int>(std::round(r.x())),
+                        .y1 = static_cast<int>(std::round(r.y())),
+                        .x2 = static_cast<int>(std::round(r.x() + r.width())),
+                        .y2 = static_cast<int>(std::round(r.y() + r.height()))};
 
         int recovered_class = -1;
         float best_iou = TrackerFixedParams::class_recovery_min_iou;  // require reasonable overlap to trust the recovery
@@ -99,9 +99,12 @@ ByteTrackerAdapter::update(const std::vector<Data::Detection>& detections) {
         }
 
         out.push_back(Data::TrackedDetection{
-            Data::Detection{bbox, recovered_class, static_cast<double>(t->getScore())},
-            t->getTrackId()
-        });
+            .detection =
+                Data::Detection{
+                    .bbox = bbox,
+                    .class_id = recovered_class,
+                    .confidence_score = static_cast<double>(t->getScore())},
+            .track_id = t->getTrackId()});
     }
     return out;
 }

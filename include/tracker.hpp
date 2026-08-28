@@ -15,17 +15,17 @@ namespace byte_track { class BYTETracker; }
 struct TrackerConfig {
     static constexpr int frame_rate    = 30;
     static constexpr int track_buffer  = 30;
-    static constexpr float track_thresh = 0.5f;
-    static constexpr float high_thresh  = 0.6f;
-    static constexpr float match_thresh = 0.8f;
+    static constexpr float track_thresh = 0.5F;
+    static constexpr float high_thresh = 0.6F;
+    static constexpr float match_thresh = 0.8F;
 };
 
 namespace TrackerFixedParams {
     // IoU tuning threshold before a track's class_id is recovered from a detection
-    constexpr float class_recovery_min_iou = 0.5f;
+constexpr float class_recovery_min_iou = 0.5F;
 
-    // Fault-tolerance policy
-    constexpr int RetryBudget = 5;
+// Fault-tolerance policy
+constexpr int RetryBudget = 5;
 }
 
 class ByteTrackerAdapter {
