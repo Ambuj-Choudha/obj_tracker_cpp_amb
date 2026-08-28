@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <format>
 #include <iostream>
 #include <opencv2/core.hpp>
@@ -27,9 +26,10 @@ WebcamCamera::WebcamCamera(int deviceID, int apiID, int retry_budget)
 
     cap.open(deviceID, apiID);
     if (!cap.isOpened()) {
-        throw Status::FatalException(Status::Fatal{
-            Status::Stage::Source,
-            std::format("Error: Could not open camera with deviceID: {}", deviceID)});
+      throw Status::FatalException(Status::Fatal{
+          .origin = Status::Stage::Source,
+          .cause = std::format("Error: Could not open camera with deviceID: {}",
+                               deviceID)});
     }
     std::cout << "Camera initialized successfully!\n";
     cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);
@@ -67,9 +67,11 @@ VideoFile::VideoFile(const std::string& source_file, int apiID, int retry_budget
 
     cap.open(source_file, apiID);
     if (!cap.isOpened()) {
-        throw Status::FatalException(Status::Fatal{
-            Status::Stage::Source,
-            std::format("ERROR: Unable to open source file '{}'. Please check the file path and format.", source_file)});
+      throw Status::FatalException(Status::Fatal{
+          .origin = Status::Stage::Source,
+          .cause = std::format("ERROR: Unable to open source file '{}'. Please "
+                               "check the file path and format.",
+                               source_file)});
     }
     cap.set(cv::CAP_PROP_FRAME_WIDTH, CameraDefaults::FrameDefaultWidth);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, CameraDefaults::FrameDefaultHeight);
