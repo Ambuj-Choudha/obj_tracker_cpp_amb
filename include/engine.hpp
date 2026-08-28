@@ -24,7 +24,9 @@ public:
         int64_t cols;   // e.g. 6 fields per row
 
         // Pointer to the start of row `i` (row-major layout).
-        const float* row(int64_t i) const { return data_ptr + i * cols; }
+        [[nodiscard]] const float* row(int64_t i) const {
+          return data_ptr + (i * cols);
+        }
     };
 
     explicit InferenceEngine(const std::string& model_path);
@@ -37,7 +39,9 @@ public:
 
     // Shape the model declares at its single input tensor, e.g. {1, 3, 640, 640}.
     // Read from the ONNX at load time — no hardcoded values in this class.
-    const std::vector<int64_t>& input_shape() const { return input_shape_; }
+    [[nodiscard]] const std::vector<int64_t>& input_shape() const {
+      return input_shape_;
+    }
 
 private:
     Ort::Env env_;
