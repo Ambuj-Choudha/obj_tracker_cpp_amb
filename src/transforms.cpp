@@ -14,9 +14,10 @@ std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(cons
 
     // EOF gives out a default-constructed Frame, so check the state before proceeding
     if (src.mat.empty()) {
-        throw Status::FatalException(Status::Fatal{
-            Status::Stage::Preprocess,
-            "empty frame reached preprocessing: the source reported success without decoding one"});
+      throw Status::FatalException(Status::Fatal{
+          .origin = Status::Stage::Preprocess,
+          .cause = "empty frame reached preprocessing: the source reported "
+                   "success without decoding one"});
     }
 
     cv::Mat img;
@@ -25,10 +26,11 @@ std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(cons
         case 1: cv::cvtColor(src.mat, img, cv::COLOR_GRAY2BGR);    break;
         case 4: cv::cvtColor(src.mat, img, cv::COLOR_BGRA2BGR);    break;
         default:
-            throw Status::FatalException(Status::Fatal{
-                Status::Stage::Preprocess,
-                std::format("unsupported channel count {}: expected 1 (gray), 3 (BGR) or 4 (BGRA)",
-                            src.mat.channels())});
+          throw Status::FatalException(Status::Fatal{
+              .origin = Status::Stage::Preprocess,
+              .cause = std::format("unsupported channel count {}: expected 1 "
+                                   "(gray), 3 (BGR) or 4 (BGRA)",
+                                   src.mat.channels())});
     }
 
     int img_w = img.cols;
@@ -63,7 +65,7 @@ std::tuple<cv::Mat, double, int, int> preprocess::apply_letterbox_transform(cons
 Data::BBox postprocess::undo_letter_box_transform(float x1, float y1, float x2, float y2,
                                                   double scale, int dw, int dh, int img_w, int img_h) {
     // Inverse of apply_letterbox: strip the pad, then undo the uniform scale.
-    Data::BBox bbox;
+    Data::BBox bbox{};
     bbox.x1 = static_cast<int>(std::round((x1 - dw) / scale));
     bbox.y1 = static_cast<int>(std::round((y1 - dh) / scale));
     bbox.x2 = static_cast<int>(std::round((x2 - dw) / scale));

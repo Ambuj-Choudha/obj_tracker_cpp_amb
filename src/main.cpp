@@ -1,15 +1,14 @@
-#include <opencv2/core.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/highgui.hpp>
 #include <iostream>
 #include <memory>
-#include <stdio.h>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/videoio.hpp>
 #include <string>
 #include <variant>
 
+#include "camera.hpp"
 #include "common/status.hpp"
 #include "common/types.hpp"
-#include "camera.hpp"
 #include "detector.hpp"
 #include "reporting.hpp"
 #include "tracker.hpp"
