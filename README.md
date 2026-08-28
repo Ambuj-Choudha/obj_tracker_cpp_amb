@@ -2,10 +2,33 @@
 
 ## 1.0 Goal
 
-Real-time object detection and tracking pipeline using C++.
+Object detection and tracking pipeline using C++.
 Combines YOLOv10m (detection) with ByteTrack (multi-object tracking).
 
-## 2.0 Setup
+## 2.0 Architecture
+
+Each frame moves through six stages, one class per stage:
+
+<img src="docs/architechture_horz.png" alt="pipeline stages: video capture, pre-processing, detections, post-processing, tracker, visualization">
+
+| Stage | File | Class |
+|---|---|---|
+| Video Capture | `camera.hpp` | `WebcamCamera` / `VideoFile` |
+| Pre-processing | `detector.hpp` (`preprocess_frames_`) | `YOLOv10DetectorONNX` |
+| Detection | `engine.hpp` | `InferenceEngine` |
+| Post-processing | `detector.hpp` (`postprocess_frames_`) | `YOLOv10DetectorONNX` |
+| Tracker | `tracker.hpp` | `ByteTrackerAdapter` |
+| Visualization | `visualization.hpp` | `Visualizer` |
+
+`main.cpp` wires these together in a single loop. Every stage returns `Status::Result<T>` (`common/status.hpp`)
+instead of throwing on ordinary failure, a `Recoverable` error is re-tried (`common/retry_monitor.hpp`) before it escalates to
+`Fatal` and the loop exits. `ConsoleReporter` (`reporting.hpp`) prints the diagonistics in case of failure.
+
+## 3.0 Performance
+
+Currently runs at ~5FPS which has been measured on a sample video (`data/input/Vehicles_sample.mp4`), 640x360, 302 frames, CPU only ONNX Runtime.
+
+## 4.0 Setup
 
 Check all the Dependencies and the build recipe at:
 - System packages → [`.devcontainer/apt-packages.txt`](.devcontainer/apt-packages.txt)
@@ -86,15 +109,13 @@ The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths
 ## TODOs
 
 - Add a capture timestamp to `Data::Frame` (`steady_clock`)
-- Add performance diagnostics for profiling the pipeline (per-stage wall-clock,
-  printed on exit) and record the numbers
 - Add tests for isolated testing (`MockSource` exercising the EOF-vs-disconnect
   split)
 - Wrap the detector into a ROS2 node
 - Implement multi-threading
 - Add a command line parser for changing runtime configs
 
-## 3.0 References
+## 5.0 References
 - [ByteTrack C++ Implementation](https://github.com/Vertical-Beach/ByteTrack-cpp/tree/main)
 - [YOLOv10 ONNX model](https://huggingface.co/onnx-community/yolov10m)
 
