@@ -21,15 +21,18 @@ namespace {
         std::ifstream in(labels_file_path);
 
         if (!in) {
-            throw Status::FatalException(Status::Fatal{
-                Status::Stage::Visualization,
-                std::format("failed to open class labels file '{}'", labels_file_path)});
+          throw Status::FatalException(Status::Fatal{
+              .origin = Status::Stage::Visualization,
+              .cause = std::format("failed to open class labels file '{}'",
+                                   labels_file_path)});
         }
 
         std::string line;
         int idx = 0;
         while (std::getline(in, line)) {
-            if (!line.empty() && line.back() == '\r') line.pop_back();
+          if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+          }
             labels.emplace(idx++, std::move(line));
         }
         return labels;
@@ -49,21 +52,25 @@ namespace {
     }
 }
 
-Visualizer::Visualizer(int border_thickness, std::optional<std::tuple<int, int, int>> text_colour)
+Visualizer::Visualizer(int border_thickness,
+                       std::optional<std::tuple<int, int, int>> text_colour)
     : border_thickness_{border_thickness},
       text_colour_{text_colour.value_or(VisualizerConfig::text_colour)},
-      font_scale_{VisualizerConfig::font_scale},
-      class_labels_dict_{load_class_labels(VisualizerConfig::class_labels_file_path)},
-      colour_map_{generate_colour_map(DetectorFixedParams::num_classes)} {
 
-    if (static_cast<int>(class_labels_dict_.size()) != DetectorFixedParams::num_classes) {
-        throw Status::FatalException(Status::Fatal{
-            Status::Stage::Visualization,
-            std::format("class labels file '{}' has {} entries but this build is configured for "
-                        "{} classes - the labels file does not match the model",
-                        VisualizerConfig::class_labels_file_path,
-                        class_labels_dict_.size(), DetectorFixedParams::num_classes)});
-    }
+      class_labels_dict_{
+          load_class_labels(VisualizerConfig::class_labels_file_path)},
+      colour_map_{generate_colour_map(DetectorFixedParams::num_classes)} {
+  if (static_cast<int>(class_labels_dict_.size()) !=
+      DetectorFixedParams::num_classes) {
+    throw Status::FatalException(Status::Fatal{
+        .origin = Status::Stage::Visualization,
+        .cause = std::format(
+            "class labels file '{}' has {} entries but this build is "
+            "configured for "
+            "{} classes - the labels file does not match the model",
+            VisualizerConfig::class_labels_file_path, class_labels_dict_.size(),
+            DetectorFixedParams::num_classes)});
+  }
 }
 
 void Visualizer::draw_detections(Data::Frame& frame, const std::vector<Data::Detection>& detections) {

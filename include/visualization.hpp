@@ -33,7 +33,7 @@ class Visualizer{
     private:
         int border_thickness_;
         std::tuple<int, int, int> text_colour_;
-        double font_scale_;
+        double font_scale_{VisualizerConfig::font_scale};
 
         // define from the asset/coco.names
         const std::unordered_map<int, std::string> class_labels_dict_;
