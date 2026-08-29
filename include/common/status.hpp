@@ -38,9 +38,9 @@ public:
     explicit FatalException(Fatal fatal)
         : std::runtime_error{fatal.cause}, error_{std::move(fatal)} {}
 
-    const Fatal& error() const noexcept { return error_; }
+    [[nodiscard]] const Fatal& error() const noexcept { return error_; }
 
-private:
+   private:
     Fatal error_;
 };
 

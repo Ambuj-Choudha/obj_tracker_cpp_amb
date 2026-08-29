@@ -6,14 +6,15 @@
 #include "common/status.hpp"
 
 InferenceEngine::InferenceEngine(const std::string& model_path)
-    : env_{ORT_LOGGING_LEVEL_WARNING, "InferenceEngine"},
-      session_options_{} {
+    : env_{ORT_LOGGING_LEVEL_WARNING, "InferenceEngine"} {
+  session_options_.SetGraphOptimizationLevel(
+      GraphOptimizationLevel::ORT_ENABLE_ALL);
 
-    session_options_.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-
-    // Covers the whole constructor body, as it can fail at GetInputTypeInfo if it has no input 0.
-    try {
-        // ORT session ctor takes ORTCHAR_T*, which is wchar_t on Windows and char elsewhere.
+  // Covers the whole constructor body, as it can fail at GetInputTypeInfo if it
+  // has no input 0.
+  try {
+    // ORT session ctor takes ORTCHAR_T*, which is wchar_t on Windows and char
+    // elsewhere.
 #ifdef _WIN32
         std::wstring wpath(model_path.begin(), model_path.end());
         session_ = Ort::Session{env_, wpath.c_str(), session_options_};
@@ -28,9 +29,12 @@ InferenceEngine::InferenceEngine(const std::string& model_path)
         // Read the input shape the model declares (e.g. {1, 3, 640, 640}).
         input_shape_ = session_.GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
     } catch (const Ort::Exception& load_error) {
-        throw Status::FatalException(Status::Fatal{Status::Stage::Inference,
-                    std::format("failed to load model '{}': {} (ORT error {})",
-                        model_path, load_error.what(), static_cast<int>(load_error.GetOrtErrorCode()))});
+      throw Status::FatalException(Status::Fatal{
+          .origin = Status::Stage::Inference,
+          .cause =
+              std::format("failed to load model '{}': {} (ORT error {})",
+                          model_path, load_error.what(),
+                          static_cast<int>(load_error.GetOrtErrorCode()))});
     }
 
     // Some models declare batch dim as -1 (dynamic). Pin it to 1 for our single-frame use.
@@ -67,11 +71,15 @@ std::optional<InferenceEngine::Output> InferenceEngine::infer(const float* input
     if (shape.size() != 3 || shape[0] != 1) {
         std::string actual;
         for (std::size_t i = 0; i < shape.size(); ++i) {
-            actual += (i ? "," : "") + std::to_string(shape[i]);
+          actual += ((i != 0u) ? "," : "") + std::to_string(shape[i]);
         }
         throw Status::FatalException(Status::Fatal{
-            Status::Stage::Inference,
-            std::format("unexpected model output shape [{}]: expected [1,N,K]", actual)});
+            .origin = Status::Stage::Inference,
+            .cause = std::format(
+                "unexpected model output shape [{}]: expected [1,N,K]",
+                actual)});
     }
-    return Output{last_output_.GetTensorData<float>(), shape[1], shape[2]};
+    return Output{.data_ptr = last_output_.GetTensorData<float>(),
+                  .rows = shape[1],
+                  .cols = shape[2]};
 }

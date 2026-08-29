@@ -22,20 +22,20 @@ int fail(const std::string& msg) {
 }  // namespace
 
 int main() {
-    VisualizerDefaults::class_labels_file_path =
+    VisualizerConfig::class_labels_file_path =
         std::string{PROJECT_ROOT} + "/assets/labels/coco.names";
 
     // 1. The shipped assets agree with the compiled-in class count.
     try {
         Visualizer visualizer{2};
-        std::cout << "labels file matches DetectorDefaults::num_classes ("
-                  << DetectorDefaults::num_classes << ")\n";
+        std::cout << "labels file matches DetectorFixedParams::num_classes ("
+                  << DetectorFixedParams::num_classes << ")\n";
     } catch (const Status::FatalException& e) {
         return fail(std::string{"shipped assets are inconsistent: "} + e.what());
     }
 
     // 2. A missing labels file is fatal at construction, not at first draw.
-    VisualizerDefaults::class_labels_file_path = std::string{PROJECT_ROOT} + "/assets/labels/does_not_exist.names";
+    VisualizerConfig::class_labels_file_path = std::string{PROJECT_ROOT} + "/assets/labels/does_not_exist.names";
     try {
         Visualizer visualizer{2};
         return fail("expected a FatalException for a missing labels file");

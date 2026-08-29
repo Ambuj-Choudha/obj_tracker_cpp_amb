@@ -10,14 +10,17 @@
 
 #include "common/types.hpp"
 
-// Almost all of the params can be modified during runtime that is why defined in the struct
-struct VisualizerDefaults {
+struct VisualizerConfig {
     static inline std::tuple<int,int,int> text_colour{0, 0, 0};
-    static inline int font = cv::FONT_HERSHEY_SIMPLEX;
     static inline double font_scale = 0.5;
-    static constexpr int colour_seed = 42;
     static inline std::string class_labels_file_path = "assets/labels/coco.names";
 };
+
+// Fixed internal constants for Visualizer; not caller-configurable.
+namespace VisualizerFixedParams {
+    constexpr int font = cv::FONT_HERSHEY_SIMPLEX;
+    constexpr int colour_seed = 42;
+}
 
 
 class Visualizer{
@@ -30,7 +33,7 @@ class Visualizer{
     private:
         int border_thickness_;
         std::tuple<int, int, int> text_colour_;
-        double font_scale_;
+        double font_scale_{VisualizerConfig::font_scale};
 
         // define from the asset/coco.names
         const std::unordered_map<int, std::string> class_labels_dict_;

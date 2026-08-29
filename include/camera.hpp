@@ -5,7 +5,6 @@
 #include <opencv2/highgui.hpp>
 #include <format>
 #include <iostream>
-#include <stdio.h>
 #include <string>
 #include <string_view>
 
@@ -27,16 +26,20 @@ class IInputSource {
     public:
         virtual ~IInputSource() = default;
         virtual Status::Result<Data::Frame> getNextFrame() = 0;
-        virtual Status::SourceState getSourceState() const noexcept = 0;
+        [[nodiscard]] virtual Status::SourceState getSourceState()
+            const noexcept = 0;
 
-        virtual double getFps() const = 0;
+        [[nodiscard]] virtual double getFps() const = 0;
 };
 
 // Abstract base class
 class VideoCaptureBase : public IInputSource {
     public:
-        double getFps() const override { return current_fps_; }
-        Status::SourceState getSourceState() const noexcept override { return source_state_; }
+     [[nodiscard]] double getFps() const override { return current_fps_; }
+     [[nodiscard]] Status::SourceState getSourceState()
+         const noexcept override {
+       return source_state_;
+     }
 
     protected:
         explicit VideoCaptureBase(int retry_budget)

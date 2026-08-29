@@ -15,15 +15,13 @@ namespace {
     }
 }
 
-YOLOv10DetectorONNX::YOLOv10DetectorONNX(
-    const std::string& model_path, double confidence_threshold,
-    int preprocess_retry_budget, int inference_retry_budget, int postprocess_retry_budget)
+YOLOv10DetectorONNX::YOLOv10DetectorONNX(const std::string& model_path, double confidence_threshold)
     : confidence_threshold_{confidence_threshold},
       engine_{model_path},
       target_size_{static_cast<int>(engine_.input_shape()[2])},
-      preprocess_monitor_{Status::Stage::Preprocess, preprocess_retry_budget},
-      inference_monitor_{Status::Stage::Inference, inference_retry_budget},
-      postprocess_monitor_{Status::Stage::Postprocess, postprocess_retry_budget} {}
+      preprocess_monitor_{Status::Stage::Preprocess, DetectorFixedParams::PreprocessRetryBudget},
+      inference_monitor_{Status::Stage::Inference, DetectorFixedParams::InferenceRetryBudget},
+      postprocess_monitor_{Status::Stage::Postprocess, DetectorFixedParams::PostprocessRetryBudget} {}
 
 Status::Result<std::vector<Data::Detection>>
 YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
@@ -39,11 +37,12 @@ YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
     }
     inference_monitor_.record_success();
 
-    return this->postprocess_frames_(*raw_outputs, preprocessed_frame->scale, preprocessed_frame->dw, preprocessed_frame->dh);
+    return this->postprocess_frames_(*raw_outputs, preprocessed_frame->scale, preprocessed_frame->dw, preprocessed_frame->dh,
+                                     frame.mat.cols, frame.mat.rows);
 }
 
 Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
-    namespace preConfig = PreprocessorConfig;
+    namespace preConfig = PreprocessorFixedParams;
 
     try {
     auto [letterboxed_frame, scale, dw, dh] = preprocess::apply_letterbox_transform(frame, target_size_);
@@ -60,7 +59,7 @@ Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::prepro
     );
 
     auto blob = cv::dnn::blobFromImageWithParams(letterboxed_frame, imgParams);
-    return LetterboxedBlob{blob, scale, dw, dh};
+    return LetterboxedBlob{.blob = blob, .scale = scale, .dw = dw, .dh = dh};
     } catch (const cv::Exception& preprocess_error) {
         if (is_out_of_memory(preprocess_error)) {
             return std::unexpected(preprocess_monitor_.record_failure(kBlobOutOfMemoryCause, "preprocess"));
@@ -70,12 +69,13 @@ Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::prepro
 }
 
 Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::postprocess_frames_(
-    InferenceEngine::Output raw_outputs, double scale, int dw, int dh) {
-    if (raw_outputs.cols != DetectorDefaults::OutputFieldsPerRow) {
-        throw Status::FatalException(Status::Fatal{
-            Status::Stage::Postprocess,
-            std::format("model output has {} fields per row, expected {}",
-                        raw_outputs.cols, DetectorDefaults::OutputFieldsPerRow)});
+    InferenceEngine::Output raw_outputs, double scale, int dw, int dh, int img_w, int img_h) {
+    if (raw_outputs.cols != DetectorFixedParams::OutputFieldsPerRow) {
+      throw Status::FatalException(Status::Fatal{
+          .origin = Status::Stage::Postprocess,
+          .cause = std::format(
+              "model output has {} fields per row, expected {}",
+              raw_outputs.cols, DetectorFixedParams::OutputFieldsPerRow)});
     }
 
     std::vector<Data::Detection> detections;
@@ -89,13 +89,17 @@ Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::postprocess_fr
             const double conf = row[4];
 
             // rows are score-sorted, so once we drop below threshold we're done
-            if (conf < this->confidence_threshold_) break;
+            if (conf < this->confidence_threshold_) {
+              break;
+            }
 
             Data::BBox bbox_orig = postprocess::undo_letter_box_transform(row[0], row[1], row[2], row[3],
-                                                                        scale, dw, dh);
+                                                                        scale, dw, dh, img_w, img_h);
             const int class_id = static_cast<int>(row[5]);
 
-            detections.push_back(Data::Detection{bbox_orig, class_id, conf});
+            detections.push_back(Data::Detection{.bbox = bbox_orig,
+                                                 .class_id = class_id,
+                                                 .confidence_score = conf});
         }
     } catch (const std::bad_alloc&) {
         return std::unexpected(postprocess_monitor_.record_failure(kDetectionsOutOfMemoryCause, "postprocess"));
