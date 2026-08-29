@@ -9,7 +9,15 @@ Combines YOLOv10m (detection) with ByteTrack (multi-object tracking).
 
 Each frame moves through six stages, one class per stage:
 
-<img src="docs/architechture_horz.png" alt="pipeline stages: video capture, pre-processing, detections, post-processing, tracker, visualization">
+```mermaid
+flowchart LR
+    A[Video Capture] --> B[Pre-processing]
+    B --> C[Detection]
+    C --> D[Post-processing]
+    D --> E[Tracker]
+    E --> F[Visualization]
+```
+
 
 | Stage | File | Class |
 |---|---|---|
@@ -92,13 +100,17 @@ From the repo root (asset paths are relative to CWD):
 
 ### Tests
 
-A smoke test for the detector is built by default with the `dev` preset (the `release` preset disables it).
+Five test binaries are built by default with the `dev` preset (the `release` preset disables all of them):
 
 ```bash
+./build-ninja/test_camera
 ./build-ninja/test_detector
+./build-ninja/test_reporting
+./build-ninja/test_retry_monitor
+./build-ninja/test_visualizer
 ```
 
-The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths defined in the test file.
+`test_detector` expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths defined in the test file. The others need no external assets.
 
 ### Controls
 
@@ -109,8 +121,6 @@ The test expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths
 ## TODOs
 
 - Add a capture timestamp to `Data::Frame` (`steady_clock`)
-- Add tests for isolated testing (`MockSource` exercising the EOF-vs-disconnect
-  split)
 - Wrap the detector into a ROS2 node
 - Implement multi-threading
 - Add a command line parser for changing runtime configs
