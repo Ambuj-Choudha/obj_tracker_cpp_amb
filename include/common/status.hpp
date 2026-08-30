@@ -15,6 +15,18 @@ enum class Stage { Source, Preprocess, Inference, Postprocess, Tracking, Visuali
 // Update the last enumerator here if you add a stage after Visualization.
 inline constexpr std::size_t stage_count = static_cast<std::size_t>(Stage::Visualization) + 1;
 
+inline constexpr std::string_view stage_name(Stage stage) {
+    switch (stage) {
+        case Stage::Source:        return "Source";
+        case Stage::Preprocess:    return "Preprocess";
+        case Stage::Inference:     return "Inference";
+        case Stage::Postprocess:   return "Postprocess";
+        case Stage::Tracking:      return "Tracking";
+        case Stage::Visualization: return "Visualization";
+    }
+    return "Unknown";
+}
+
 struct Fatal {
     Stage origin;
     std::string cause;  // a Fatal happens once, so the allocation is fine

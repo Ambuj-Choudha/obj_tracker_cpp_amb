@@ -1,3 +1,5 @@
+#include <chrono>
+#include <cstdio>
 #include <format>
 #include <iostream>
 #include <opencv2/core.hpp>
@@ -59,7 +61,7 @@ auto WebcamCamera::getNextFrame() -> Status::Result<Data::Frame> {
     record_success();
     updateFps();
 
-    return Data::Frame{frame};
+    return Data::Frame{frame, std::chrono::steady_clock::now()};
 }
 
 VideoFile::VideoFile(const std::string& source_file, int apiID, int retry_budget)
@@ -118,5 +120,5 @@ auto VideoFile::getNextFrame() -> Status::Result<Data::Frame> {
     record_success();
     updateFps();
 
-    return Data::Frame{frame};
+    return Data::Frame{frame, std::chrono::steady_clock::now()};
 }

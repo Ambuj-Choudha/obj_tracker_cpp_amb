@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -55,6 +56,10 @@ class YOLOv10DetectorONNX : public DetectorBase{
 
         Status::Result<std::vector<Data::Detection>> detect(const Data::Frame& frame) override;
 
+        std::chrono::steady_clock::duration preprocess_time() const noexcept { return preprocess_time_; }
+        std::chrono::steady_clock::duration inference_time() const noexcept { return inference_time_; }
+        std::chrono::steady_clock::duration postprocess_time() const noexcept { return postprocess_time_; }
+
     private:
         double confidence_threshold_;
         InferenceEngine engine_;
@@ -63,6 +68,10 @@ class YOLOv10DetectorONNX : public DetectorBase{
         RetryMonitor preprocess_monitor_;
         RetryMonitor inference_monitor_;
         RetryMonitor postprocess_monitor_;
+
+        std::chrono::steady_clock::duration preprocess_time_{};
+        std::chrono::steady_clock::duration inference_time_{};
+        std::chrono::steady_clock::duration postprocess_time_{};
 
         // letterboxed Blob amd the parameters postprocess needs for inversion
         struct LetterboxedBlob {

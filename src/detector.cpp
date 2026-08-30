@@ -1,4 +1,5 @@
 #include "detector.hpp"
+#include "common/scoped_timer.hpp"
 #include "common/types.hpp"
 
 #include <format>
@@ -23,15 +24,18 @@ YOLOv10DetectorONNX::YOLOv10DetectorONNX(const std::string& model_path, double c
       inference_monitor_{Status::Stage::Inference, DetectorFixedParams::InferenceRetryBudget},
       postprocess_monitor_{Status::Stage::Postprocess, DetectorFixedParams::PostprocessRetryBudget} {}
 
-Status::Result<std::vector<Data::Detection>>
-YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
+Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
     auto preprocessed_frame = this->preprocess_frames_(frame);
     if (!preprocessed_frame) {
         return std::unexpected(preprocessed_frame.error());  // drop this frame, keep the loop alive
     }
     preprocess_monitor_.record_success();
 
-    auto raw_outputs = engine_.infer(preprocessed_frame->blob.ptr<float>(), preprocessed_frame->blob.total());
+    std::optional<InferenceEngine::Output> raw_outputs;
+    {
+        Timing::ScopedAccumulator timer{inference_time_};
+        raw_outputs = engine_.infer(preprocessed_frame->blob.ptr<float>(), preprocessed_frame->blob.total());
+    }
     if (!raw_outputs) {
         return std::unexpected(inference_monitor_.record_failure(kInferenceFailedCause, "inference"));
     }
@@ -42,6 +46,7 @@ YOLOv10DetectorONNX::detect(const Data::Frame& frame) {
 }
 
 Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::preprocess_frames_(const Data::Frame& frame) {
+    Timing::ScopedAccumulator timer{preprocess_time_};
     namespace preConfig = PreprocessorFixedParams;
 
     try {
@@ -70,6 +75,7 @@ Status::Result<YOLOv10DetectorONNX::LetterboxedBlob> YOLOv10DetectorONNX::prepro
 
 Status::Result<std::vector<Data::Detection>> YOLOv10DetectorONNX::postprocess_frames_(
     InferenceEngine::Output raw_outputs, double scale, int dw, int dh, int img_w, int img_h) {
+    Timing::ScopedAccumulator timer{postprocess_time_};
     if (raw_outputs.cols != DetectorFixedParams::OutputFieldsPerRow) {
       throw Status::FatalException(Status::Fatal{
           .origin = Status::Stage::Postprocess,
