@@ -5,6 +5,8 @@
 Real-time object detection and tracking pipeline using C++.
 Combines YOLOv10n (detection) with ByteTrack (multi-object tracking).
 
+![Pedestrian tracking demo](data/output/Pedestrian.gif)
+
 ## 2.0 Architecture
 
 Each frame moves through six stages, one class per stage:
@@ -34,7 +36,22 @@ instead of throwing on ordinary failure, a `Recoverable` error is re-tried (`com
 
 ## 3.0 Performance
 
-Currently runs at ~5FPS which has been measured on a sample video (`data/input/Vehicles_sample.mp4`), 640x360, 302 frames, CPU only ONNX Runtime.
+Per stage timing is printed on exit.
+
+Sample run, YOLOv10n, CPU inference (ONNX Runtime CPU), 734 frames
+from `data/input/Pedestrian_Sample_Video.mp4` (640x360), on an AMD Ryzen 7 PRO 7730U:
+
+| Stage         | Avg ms/frame |
+|---------------|-------------:|
+| Source        |        0.443 |
+| Preprocess    |       19.659 |
+| Inference     |       59.279 |
+| Postprocess   |        0.002 |
+| Tracking      |        0.038 |
+| Visualization |        0.658 |
+| **Total**     |   **80.079** |
+
+Approx throughput: 12.49 FPS.
 
 ## 4.0 Setup
 
