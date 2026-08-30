@@ -42,7 +42,7 @@ export LD_LIBRARY_PATH="${ORT_PREFIX}/lib\${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH
 EOF
 echo "==> Wrote ${ENV_FILE}"
 
-echo "==> Fetching YOLOv10m model"
+echo "==> Fetching YOLOv10n model"
 bash .devcontainer/post-create.sh
 
 # shellcheck disable=SC1090

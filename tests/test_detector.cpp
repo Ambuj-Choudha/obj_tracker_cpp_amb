@@ -19,7 +19,7 @@
 
 namespace {
 
-// COCO class ids used by yolov10m
+// COCO class ids used by yolov10n
 constexpr int COCO_HORSE = 17;
 
 int fail(const std::string& msg) {
@@ -30,7 +30,7 @@ int fail(const std::string& msg) {
 }  // namespace
 
 int main() {
-    const std::string model_path = std::string{PROJECT_ROOT} + "/assets/model/yolov10m/yolov10m.onnx";
+    const std::string model_path = std::string{PROJECT_ROOT} + "/assets/model/yolov10n/yolov10n.onnx";
     const std::string image_path = std::string{PROJECT_ROOT} + "/data/input/horse.jpg";
 
     cv::Mat img = cv::imread(image_path);

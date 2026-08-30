@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 
     try {
         using namespace std::string_literals;
-        std::string model_path = "assets/model/yolov10m/yolov10m.onnx"s;
+        std::string model_path = "assets/model/yolov10n/yolov10n.onnx"s;
 
         if (argc < 2) {
             source = std::make_unique<WebcamCamera>();

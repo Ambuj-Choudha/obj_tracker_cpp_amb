@@ -2,8 +2,8 @@
 
 ## 1.0 Goal
 
-Object detection and tracking pipeline using C++.
-Combines YOLOv10m (detection) with ByteTrack (multi-object tracking).
+Real-time object detection and tracking pipeline using C++.
+Combines YOLOv10n (detection) with ByteTrack (multi-object tracking).
 
 ## 2.0 Architecture
 
@@ -58,7 +58,7 @@ Reproducible environment with the toolchain and dependencies pre-installed.
    ```bash
    xhost +local:
    ```
-2. Open the repo in VS Code → **Dev Containers: Reopen in Container**. First build compiles the image and runs [`post-create.sh`](.devcontainer/post-create.sh), which downloads ONNX Runtime and the YOLOv10m model (~65 MB).
+2. Open the repo in VS Code → **Dev Containers: Reopen in Container**. First build compiles the image and runs [`post-create.sh`](.devcontainer/post-create.sh), which downloads ONNX Runtime and the YOLOv10n model (~9 MB).
 3. Continue with **Step 3 - Build** inside the container terminal.
 
 The container mounts `/dev/video0` and the X11 socket, so the OpenCV preview window and webcam work out of the box. If your camera is on a different device node (e.g. `/dev/video2`), edit `runArgs` in [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json).
@@ -110,7 +110,7 @@ Five test binaries are built by default with the `dev` preset (the `release` pre
 ./build-ninja/test_visualizer
 ```
 
-`test_detector` expects `data/input/horse.jpg` and the YOLOv10m ONNX model at the paths defined in the test file. The others need no external assets.
+The test expects `data/input/horse.jpg` and the YOLOv10n ONNX model at the paths defined in the test file.
 
 ### Controls
 
@@ -127,5 +127,5 @@ Five test binaries are built by default with the `dev` preset (the `release` pre
 
 ## 5.0 References
 - [ByteTrack C++ Implementation](https://github.com/Vertical-Beach/ByteTrack-cpp/tree/main)
-- [YOLOv10 ONNX model](https://huggingface.co/onnx-community/yolov10m)
+- [YOLOv10 ONNX model](https://huggingface.co/onnx-community/yolov10n)
 
